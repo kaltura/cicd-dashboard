@@ -1,0 +1,40 @@
+.card{
+    margin-top: 0px;
+    z-index: 3;
+}
+.card-header {
+    vertical-align: bottom;
+}
+.jenkins{
+    margin-top: 20px;
+}
+.tag{
+    margin-top: 20px;
+}
+.jenkins-tag{
+    margin-top: 20px;
+}
+#notificationsContainer{
+    z-index: 10;
+    top: 20px;
+    right: 20px;
+    left: 20px;
+}
+canvas {
+    border: 0px;
+}
+.main-flow{
+    text-align: center;
+}
+.main-flow img {
+    height: 70px;
+}
+.secondary-flow{
+    text-align: center;
+}
+.secondary-flow img {
+    height: 30px;
+}
+.demo{
+    box-shadow: 0 4px 10px 0 red, 0 4px 20px 0 red
+}
