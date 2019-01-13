@@ -215,7 +215,7 @@ const jenkins = {
 }
 setInterval(jenkins.updateJobs, 10000);
 
-const halfAnHour = 30 * 60 * 1000;
+const halfAnHour = 10 * 60 * 1000;
 function filterOldResults(data) {
     var now = new Date().getTime();
     var hits = data.hits.hits
@@ -228,6 +228,9 @@ function filterOldResults(data) {
                 index: hit._index,
                 type: hit._type,
                 id: hit._id
+            })
+            .catch(err => {
+                console.error(err.message);
             });
             return false;
         }
