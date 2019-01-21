@@ -387,7 +387,8 @@
                         digest: data.digest, 
                         app: data.app, 
                         tag: data.tag, 
-                        kaltura: data.kaltura
+                        kaltura: data.kaltura,
+                        state: data.State
                     }
 
                     if(!containers[data.app]){
@@ -577,12 +578,16 @@
 
             $html = $("#container-" + container.id);
             $img = $html.find(".container-status");
-            if(container.digest == ecr.digest) {
-                $img.attr("src", "images/blue.png");
+            if(container.state.Running) {
+                if(container.digest == ecr.digest) {
+                    $img.attr("src", "images/blue.png");
+                }
+                else {
+                    $img.attr("src", "images/red.png");
+                }
             }
             else {
-                $img.attr("src", "images/red.png");
-                // console.log("Container " + container.app + ":" + container.tag + " wrong version (" + container.digest + " != " + ecr.digest + ")");
+                    $img.attr("src", "");
             }
         }
 
