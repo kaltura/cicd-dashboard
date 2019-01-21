@@ -373,6 +373,9 @@
                 });
             },
 
+            "container-info": function($html, data) {
+            },
+
             container: function($html, data) {
                 $html.attr("id", "container-" + data.Id);
                 
@@ -399,6 +402,22 @@
                         updateContainer(containerData, ecr[data.app][data.tag]);
                     }
                 }
+
+
+                $html.click(function() {
+                    pop({
+                        type: "container-info",                        
+                        app: data.app, 
+                        timestamp: data["@timestamp"],
+                        version: data.version,
+                        digest: data.digest,
+                        state: data.State,
+                        ports: data.NetworkSettings.Ports,
+                        mounts: data.Mounts,
+                        env: data.Config.Env,
+                        labels: data.Config.Labels
+                    });
+                });
             },
 
             notify: function($html, data) {
@@ -681,8 +700,10 @@
                     $serviceTR.append($td);
                 }
                 $td = $serviceTR.find("td:nth-child(" + (index + 1) + ")");
-                $td.attr("id", data.Id);
-                render(data, $td);
+                $html = $("<div/>");
+                $html.attr("id", data.Id);
+                $td.append($html);
+                render(data, $html);
                 break;
 
                 case "image":
@@ -738,8 +759,17 @@
         }
 
         function updateStatus(data) {
+            var $html = $("#" + data.Id);
+
             switch(data.type) {
                 case "container":
+                if(data.State.Dead) {
+                    if(!$html.length) {
+                        $html.remove();
+                    }
+                    return;
+                }
+
                 var regex = /^[^\/]+\/([^:\/]+):([^@]+)@sha256:(.+)$/g;
                 var matches = regex.exec(data.Config.Image);
                 if(matches) {
@@ -801,7 +831,6 @@
                 break;
             }
 
-            var $html = $("#" + data.Id);
             if(!$html.length) {
                 renderStatus(data);
                 $html = $("#" + data.Id);                
@@ -832,6 +861,14 @@
 
         function updateCloudContainers() {
             updateCloudStatus("containers")
+        }
+
+        function pop(data) {
+            $modal = $("<div/>");
+            $modal.addClass("modal");
+            $('body').append($modal);
+            render(data, $modal);
+            $modal.modal();
         }
 
         function render(data, $parent) {

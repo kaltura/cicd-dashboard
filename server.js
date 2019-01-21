@@ -64,7 +64,7 @@ class ECR {
                 }
                 else {
                     data.imageDetails.forEach(image => {
-                        var version = image.imageTags.find(tag => tag.match(/^[vV]?\d+[._]\d+[._]\d+$/));
+                        var version = image.imageTags.find(tag => tag.match(/^[vV]?\d+[._]\d+[._]\d+([._]\d+)?$/));
                         if(version) {
                             version = version
                                 .replace(/^[vV]/, '')
