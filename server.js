@@ -4,12 +4,15 @@ const path = require('path');
 const http = require('http');
 const https = require('https');
 const express = require('express');
-const session = require('express-session')
+const session = require('express-session');
+const fileUpload = require('express-fileupload');
+
 
 const config = JSON.parse(fs.readFileSync('config/config.json'));
 const logger = console;
 
 const api = require('./lib/api')(logger, config);
+const files = require('./lib/files')(logger, config);
 
 const privateKey = fs.readFileSync('ssl-dev/key.pem', 'utf8');
 const certificate = fs.readFileSync('ssl-dev/certificate.pem', 'utf8');
@@ -46,6 +49,15 @@ app.use((req, res, next) => {
 });
 
 app.use(express.static(path.join(__dirname, '/public')));
+
+app.use(fileUpload({
+    // limits: { fileSize: 50 * 1024 * 1024 },
+    preserveExtension: true,
+}));
+
+app.post('/upload', function(req, res) {
+    files.upload(req.body, req.files, res); // the uploaded file object
+});
 
 app.get('/api/*', requiresLogin, (req, res) => {
     let parts = req.path.split('/');

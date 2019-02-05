@@ -303,14 +303,19 @@ var loaders = {
             pop({
                 type: "container-info",                        
                 app: data.app, 
-                timestamp: data["@timestamp"],
+                timestamp: data.timestamp,
                 version: data.version,
                 digest: data.digest,
-                state: data.State,
-                // ports: data.NetworkSettings.Ports,
-                // mounts: data.Mounts,
-                // env: data.Config.Env,
-                labels: data.Config.Labels
+                dead: data.dead ? "true" : "false",
+                running: data.running ? "true" : "false",
+                startedAt: data.startedAt,
+                restarting: data.restarting ? "true" : "false",
+                labels: data.labels,
+                image: data.image,
+                serviceName: data.serviceName,
+                serviceId: data.serviceId,
+                namespace: data.namespace,
+                nodeId: data.nodeId,
             });
         });
     },
