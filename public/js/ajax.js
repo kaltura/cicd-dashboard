@@ -59,6 +59,14 @@ function updateJenkinsStatus() {
     });
 }
 
+function updateTests() {
+    $.ajax("api/tests", {
+        success: function(data) {
+            data.forEach(updateTest);
+        }
+    });
+}
+
 function updateCloudStatus(api, next) {
     $.ajax("api/" + api, {
         success: function(data) {
@@ -95,6 +103,7 @@ function loadFlow() {
             setInterval(updateRegistryStatus, 10000);
             setInterval(updateJenkinsStatus, 2000);
             setInterval(updateCloud, 30000);
+            setInterval(updateTests, 10000);
         },
         error: function(jqXHR, textStatus, errorThrown) {
             if(jqXHR.status == 401) {

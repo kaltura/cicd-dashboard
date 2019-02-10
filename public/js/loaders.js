@@ -211,6 +211,22 @@ var loaders = {
         });
     },
 
+    test: function($html, data) {
+        $html.attr("id", "test-" + data.id);
+
+        $fram = $html.find(".test-content");
+        $fram.attr("src", "/reports/" + data.id + "/report/index.html");
+        
+        var $body = $html.find(".test-body");
+        var $header = $html.find(".test-header");
+        $header.click(function() {
+            $body.collapse("toggle");
+        });
+
+        $resizable = $html.find(".resizable");
+        $resizable.resizable();
+    },
+
     jenkins: function($html, data) {
         $html.attr("id", "jenkins-" + data.name);
         if(data.app) {
@@ -733,4 +749,24 @@ function updateRegistryTag(app, tag, data) {
     if(services[app] && services[app][tag]){
         updateService(services[app][tag], data);
     }
+}
+
+function updateTest(test) {
+    $test = $('#test-' + test.id);
+    if($test.length) {
+        return;
+    }
+    
+    var $env = $('#env-' + test.env);
+    if(!$env.length) {
+        console.error('Environment ' + test.env + ' not found');
+        return;
+    }
+
+    var $testsResults = $env.find('.tests-results');
+    test.type = 'test';
+    test.title = 'Core';
+    test.startTime = new Date(test.startTime).toUTCString();
+    test.endTime = test.endTime ? new Date(test.endTime).toUTCString() : '';
+    render(test, $testsResults);
 }

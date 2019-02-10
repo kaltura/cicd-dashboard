@@ -36,6 +36,9 @@ canvas {
 .secondary-flow img {
     height: 30px;
 }
+.test-body {
+    padding: 0px;
+}
 .demo{
     box-shadow: 0 4px 10px 0 red, 0 4px 20px 0 red
 }
