@@ -39,7 +39,10 @@ var loaders = {
     login: function($html, data) {
         var $button = $html.find(".login");
         $button.click(function() {
-            login($("#email").val(), $("#pwd").val(), data.callback);
+            var email = $("#email").val();
+            var password = $("#pwd").val();
+            websocket.login(email, password);
+            api.login(email, password);
         });
     },
     
@@ -64,6 +67,7 @@ var loaders = {
 
         var $itemsContainer = $html.find(".items").first();
         for(var i = 0; i < data.items.length; i++) {
+            data.items[i].$parent = $itemsContainer;
             var $col = $("<div/>");
             $col.addClass("col");
             $itemsContainer.append($col);
@@ -78,6 +82,29 @@ var loaders = {
             var $flow = $html.find(".main-flow").first();
             $flow.collapse("show");
         }
+
+        $itemsContainer.on('shown.bs.collapse', function() {
+            updateJenkinsStatus();
+            $itemsContainer
+                .find(".env:visible")
+                .each(function() {
+                    $env = $(this);
+                    var env = $env.attr('data-tag');
+                    websocket.listen(env);
+                    updateCloud(env);
+                    updateRegistryStatus(env);
+                    updateTests(env);
+                });
+        });
+
+        $itemsContainer.on('hidden.bs.collapse', function() {
+            $itemsContainer
+                .find(".env:hidden")
+                .each(function() {
+                    $env = $(this);
+                    websocket.unlisten($env.attr('data-tag')); 
+                });
+        });
     },
     
     app: function($html, data) {
@@ -96,19 +123,42 @@ var loaders = {
     
     tag: function($html, data) {
         loaders.app($html, data);
-        
-        var $tagsContainer = $html.find(".tag-tags").first();
+        var id = "tag-" + data.tag + "-" + data.app;
+        if(data["tag-prefix"]) {
+            id += "-" + data["tag-prefix"];
+        }
+        $html.attr("id", id);
+
+        var $tagsContainer = $html.find(".tag-details").first();
         var $title = $html.find(".title").first();
         $title.click(function() {
             $tagsContainer.collapse("toggle");                    
         });
+        
+        var $buildButten = $html.find(".deploy");
+        if(data.jobName) {
+            $buildButten.text('Build');
+            $buildButten.click(function() {
+                buildJenkinsJob(data.jobName, data.parameters);
+            });
+        }
+        else if(data.src) {
+            $buildButten.click(function() {
+                deployRegistry(data);
+            });
+        }
+        else {
+            $buildButten.remove();
+        }
     },
     
     env: function($html, data) {
         envs[data.tag] = data.name;
         data.id = "env-" + data.tag;
         $html.attr("id", data.id);
-        var $itemsContainer = $html.find(".items").first();
+        $html.attr("data-tag", data.tag);
+
+        var $itemsContainer = $html.find(".items").first();        
         var $header = $html.find(".env-header").first();
         $header.click(function() {
             $itemsContainer.collapse("toggle");
@@ -132,54 +182,51 @@ var loaders = {
         }
 
         if(data.ecr) {
-            var $ecr = $html.find(".ecr");
-            $ecr.attr("id", "ecr-" + data.id);
-            $ecr.collapse("show");
-            var $ecrItemsContainer = $ecr.find(".ecr-items");
-            loaders.hItems($ecrItemsContainer, data.ecr.filter(tag => tag.type == "tag"));
-            var $ecrHeader = $ecr.find(".ecr-header");
-            $ecrHeader.click(function() {
+            var $ecrItemsContainer = $html.find(".tag-jobs-items");
+            loaders.hItems($ecrItemsContainer, data.ecr.map(function(tag) {
+                tag.src = data.src;
+                tag.tag = data.tag;
+                return tag;
+            }));
+            var $tagJobsHeader = $html.find(".tag-jobs-header");
+            $tagJobsHeader.click(function() {
                 $ecrItemsContainer.collapse("toggle");
             });
             
-            if(data.src) {
-                $deploy = $html.find(".env-deploy");
-                $deploy.click(function() {
-                    buildJenkinsJob("Tag-Docker", {
-                        from_tag: data.src,
-                        to_tag: data.tag
-                    });
-                });
+            // if(data.src) {
+            //     $deploy = $html.find(".env-deploy");
+            //     $deploy.click(function() {
+            //         buildJenkinsJob("Tag-Docker", {
+            //             from_tag: data.src,
+            //             to_tag: data.tag
+            //         });
+            //     });
 
-                var $flow = $html.find(".flow-ecr").first();
-                $flow.collapse("show");
+            //     var $flow = $html.find(".flow-ecr").first();
+            //     $flow.collapse("show");
 
-                $tagJobs = $html.find(".tag-jobs");
-                $tagJobs.attr("id", "tag-jobs-" + data.id);
-                $tagJobs.collapse("show");
-                var $tagJobsItemsContainer = $tagJobs.find(".tag-jobs-items");
-                var jobs = data.ecr.map(tag => (tag.type == "jenkins") ? tag :  {
-                    type: "jenkins-tag",
-                    name: tag.name,
-                    app: tag.app,
-                    os: tag.os,
-                    "tag-prefix": tag["tag-prefix"],
-                    parameters: {
-                        image: tag.app,
-                        from_tag: data.src,
-                        to_tag: data.tag
-                    }
-                });
-                loaders.hItems($tagJobsItemsContainer, jobs);
-                var $tagJobsHeader = $tagJobs.find(".tag-jobs-header");
-                $tagJobsHeader.click(function() {
-                    $tagJobsItemsContainer.collapse("toggle");
-                });
-            }
-            else {
-                $main = $html.find(".env-main");
-                $main.attr("id", "main-" + data.id);
-            }
+            //     $tagJobs = $html.find(".tag-jobs");
+            //     $tagJobs.attr("id", "tag-jobs-" + data.id);
+            //     $tagJobs.collapse("show");
+            //     var $tagJobsItemsContainer = $tagJobs.find(".tag-jobs-items");
+            //     var jobs = data.ecr.map(tag => (tag.type == "jenkins") ? tag :  {
+            //         type: "jenkins-tag",
+            //         name: tag.name,
+            //         app: tag.app,
+            //         os: tag.os,
+            //         "tag-prefix": tag["tag-prefix"],
+            //         parameters: {
+            //             image: tag.app,
+            //             from_tag: (tag["tag-prefix"] ? tag["tag-prefix"] + "-" : "") + data.src,
+            //             to_tag: (tag["tag-prefix"] ? tag["tag-prefix"] + "-" : "") + data.tag
+            //         }
+            //     });
+            //     loaders.hItems($tagJobsItemsContainer, jobs);
+            // }
+            // else {
+            //     $main = $html.find(".env-main");
+            //     $main.attr("id", "main-" + data.id);
+            // }
         } 
         
         var $testsResults = $html.find(".tests-results").first();
@@ -191,10 +238,6 @@ var loaders = {
 
     "jenkins-tag": function($html, data) {
         var id = data.app + "-" + data.parameters.from_tag + "-" + data.parameters.to_tag;
-        if(data["tag-prefix"]) {
-            id = data.app + "-" + data["tag-prefix"] + "-" + data.parameters.from_tag + "-" + data["tag-prefix"] + "-" + data.parameters.to_tag;
-        }
-
         $html.attr("id", "jenkins-tag-" + id);
         loaders.app($html, data);
 
@@ -213,9 +256,15 @@ var loaders = {
 
     test: function($html, data) {
         $html.attr("id", "test-" + data.id);
+        
+        updateTestProgress($html, data);
 
+        var url = "/reports/" + data.id + "/report/index.html";
+        $link = $html.find(".new-tab");
+        $link.attr("href", url);
+        
         $fram = $html.find(".test-content");
-        $fram.attr("src", "/reports/" + data.id + "/report/index.html");
+        $fram.attr("src", url);
         
         var $body = $html.find(".test-body");
         var $header = $html.find(".test-header");
@@ -241,7 +290,7 @@ var loaders = {
 
         var $buildButten = $html.find(".build");
         $buildButten.click(function() {
-            console.log(data);
+            $html.find(".jenkins-status").attr("src", "images/in_queue.png");
             buildJenkinsJob(data.name, data.parameters);
         });
     },
@@ -376,9 +425,15 @@ function render(data, $parent) {
     
     if(data.name) {
         $html.hover(function() {
-            debug = data.type + "-" + data.name;
+            if(data.app) {
+                debug = data.type + "-" + data.app;
+            }
+            else {
+                debug = data.type + "-" + data.name;
+            }
+            console.log("Debug: " + debug);
         }, function() {
-            debug = data.type + "-" + data.name;
+            debug = null;
         });
     }
 }
@@ -527,31 +582,6 @@ function updateStatus(data) {
         return;
 
         case "service":
-        var regex = /^([^@]+)/g;
-        var matches = regex.exec(data.Spec.Labels["com.docker.stack.image"]);
-        if(matches) {
-            var image = matches[1].split("/").pop().split(":");
-            data.app = image[0];
-            if(image.length > 1) {
-                data.tag = image[1];
-            }
-            else {
-                data.tag = "latest";
-            }
-        }
-        else {
-            console.error("Couldn't parse iamge name: " + data.Spec.Labels["com.docker.stack.image"]);
-        }
-        
-        if(data.tag.match(/^linux-/)) {
-            data["tag-prefix"] = "linux";
-        }
-        if(data.tag.match(/^windows-/)) {
-            data["tag-prefix"] = "windows";
-        }
-
-        data.namespace = data.Spec.Labels["com.docker.stack.namespace"];
-        data.name = data.Spec.Name;
         break;
 
         case "node":
@@ -560,16 +590,12 @@ function updateStatus(data) {
 
     if(!$html.length) {
         renderStatus(data);
-        $html = $("#" + data.Id);                
-        if(!$html.length) {
-            return;
-        }
     }
 }
 
 function calcTimeDiff(timestamp) {
     var now = new Date().getTime();
-    var secondsAgo = (now - timestamp) / 1000;
+    var secondsAgo = (now - timestamp * 1000) / 1000;
     if(secondsAgo < 60) {
         return "Just now";
     }
@@ -590,85 +616,69 @@ function calcTimeDiff(timestamp) {
     return hours + " hours and " + minutes + " ago";
 }
 
-function updateJenkinsTag(jobName, job) {
-    if(!job.builds) {
-        return;
-    }
-
-    Object.keys(job.builds).forEach(buildNumber => {
-        var build = job.builds[buildNumber];
-        var env = build.parameters.to_tag;
-        var src = build.parameters.from_tag;
-
-        var img;
-        if(build.building) {
-            img = "blue_anime.gif";
-        }
-        else if(build.result == "FAILURE") {
-            img = "red.png";
-        }
-        else if(build.result == "SUCCESS") {
-            img = "blue.png";
-        }
-        else {
-            console.error("Build result not handled: " + build.result);
-        }
-
-        var $img;
-        if(jobName == "Tag-Docker") {
-            var $env = $("#env-" + env);
-            $img = $env.find(".tag-jobs-status");
-        }
-        else {
-            var app = build.parameters.image;
-            var $job = $("#jenkins-tag-" + app + "-" + src + "-" + env);
-            $img = $job.find(".jenkins-status");
-            updateBuild($job, build);
-        }
-        $img.attr("src", "images/" + img);
-    });
-}
-
-function updateBuild($html, build) {
+function updateBuild($html, job) {
     var $lastBuild = $html.find(".jenkins-last-build");
-    if(build) {
-        $lastBuild.attr("href", build.url);
-        $lastBuild.html(calcTimeDiff(build.timestamp));
-        $progressBar = $html.find(".jenkins-progress");
-        if(build.building) {
-            $progressBar.css("width", Math.min(build.percentage, 100) + "%");
-        }
-        else {
-            $progressBar.css("width", "0px");
-        }
-    }
-}
-
-function updateJenkinsJob(jobName, job) {
-    if(jobName.match(/^Tag-Docker/)) {
-        return updateJenkinsTag(jobName, job);
-    }
-
-    if(debug == "jenkins-" + jobName) {
-        console.log(jobName, job);
-    }
-    var $html = $("#jenkins-" + jobName);
-    if(job.inQueue) {
-        $html.find(".jenkins-status").attr("src", "images/in_queue.png");
-    }
-    else if(job.color.match(/_anime$/)) {
-        $html.find(".jenkins-status").attr("src", "images/" + job.color + ".gif");
+    $lastBuild.attr("href", job.url);
+    $lastBuild.html(calcTimeDiff(job["@timestamp"]));
+    $progressBar = $html.find(".jenkins-progress");
+    if(job.percentage) {
+        $progressBar.css("width", Math.min(job.percentage, 100) + "%");
     }
     else {
-        $html.find(".jenkins-status").attr("src", "images/" + job.color + ".png");
+        $progressBar.css("width", "0px");
     }
-    $html.find(".jenkins-header").attr("title", job.description);
+}
 
-    updateBuild($html, job.lastBuild);
+function updateDeploy(deploy) {
+    if(deploy.id == deploy.env) {
+        if(debug == "env-" + deploy.env) {
+            console.log(deploy);
+        }
+        var $html = $("#env-" + deploy.env);
+        if(deploy.status == "STARTED") {
+            $html.find(".tag-jobs-status").attr("src", "images/blue_anime.gif");
+        }
+        else {
+            $html.find(".tag-jobs-status").attr("src", "images/" + deploy.status + ".png");
+        }
+    }
+    else {
+        var app = deploy.id
+            .replace(/[:-]latest$/, '')
+            .replace(/:/, '-');
+
+        if(debug == "tag-" + app) {
+            console.log(deploy);
+        }
+        var $html = $("#tag-" + app);
+        if(deploy.status == "STARTED") {
+            $html.find(".jenkins-status").attr("src", "images/blue_anime.gif");
+        }
+        else {
+            $html.find(".jenkins-status").attr("src", "images/" + deploy.status + ".png");
+        }
+    }
+    
+    // updateBuild($html, deploy);
+}
+
+function updateJenkinsJob(job) {
+    if(debug == "jenkins-" + job.jobName) {
+        console.log(job);
+    }
+    var $html = $("#jenkins-" + job.jobName);
+    if(job.status == "STARTED") {
+        $html.find(".jenkins-status").attr("src", "images/blue_anime.gif");
+    }
+    else {
+        $html.find(".jenkins-status").attr("src", "images/" + job.status + ".png");
+    }
+
+    updateBuild($html, job);
 }
 
 function updateService(service, ecr) {
-    if((debug == "service-" + service.id) || (debug == "ecr-" + service.app)) {
+    if((debug == "service-" + service.id) || (debug == "ecr-" + service.app) || (debug == "tag-" + service.app)) {
         console.log("update-service", service, ecr);
     }
 
@@ -684,7 +694,7 @@ function updateContainer(container, ecr) {
         return;
     }
 
-    if((debug == "container-" + container.Id) || (debug == "ecr-" + container.app)) {
+    if((debug == "container-" + container.Id) || (debug == "ecr-" + container.app) || (debug == "tag-" + container.app)) {
         console.log("update-container", container, ecr);
     }
 
@@ -692,10 +702,10 @@ function updateContainer(container, ecr) {
     $img = $html.find(".container-status");
     if(container.running) {
         if(container.digest == ecr.digest) {
-            $img.attr("src", "images/blue.png");
+            $img.attr("src", "images/SUCCESS.png");
         }
         else {
-            $img.attr("src", "images/red.png");
+            $img.attr("src", "images/FAILURE.png");
         }
     }
     else {
@@ -703,57 +713,80 @@ function updateContainer(container, ecr) {
     }
 }
 
-function updateRegistryTag(app, tag, data) {
-    var env = tag;
+function updateRegistryTag(env, app, tag, data) {
     if(tag.match(/^linux-/)) {
         data["tag-prefix"] = "linux";
-        env = tag.replace(/^linux-/, "");
     }
     if(tag.match(/^windows-/)) {
         data["tag-prefix"] = "windows";
-        env = tag.replace(/^windows-/, "");
     }
-       
+
     // TODO handle _stable tags
 
-    var $env = $("#env-" + env);
-    if(!$env.length) {
+    var $tag = $("#tag-" + app);
+    if(!$tag.length) {
+        console.log("Tag not found: #tag-" + app);
         return;
     }
 
-    var $tag = $env.find(".ecr-items").find('.app-' + app);
+    var appType = app.replace(/^[^-]-/, '');
+    if((debug == "ecr-" + appType) || (debug == "tag-" + appType)) {
+        console.dir(data);
+    }
+       
     if(data.version) {
         var $version = $tag.find('.tag-version');
-        $version.text("(" + data.version + ")");
+        $version.text("Version: " + data.version);
     }
-    if(data.tags && data.tags.length) {
-        var $tags = $tag.find('.tag-tags');
-        $tags.text("Deplyed also in:");
-        $ul = $("<ul/>");
-        $tags.append($ul);
-        data.tags.forEach(function(envTag) {
-            if(envs[envTag]) {
-                $ul.append("<li>" + envs[envTag] + "</li>");
-            }
-        });
-    }
+    // if(data.tags && data.tags.length) {
+    //     var $tags = $tag.find('.tag-tags');
+    //     $tags.text("Deplyed also in:");
+    //     $ul = $("<ul/>");
+    //     $tags.append($ul);
+    //     data.tags.forEach(function(envTag) {
+    //         if(envs[envTag]) {
+    //             $ul.append("<li>" + envs[envTag] + "</li>");
+    //         }
+    //     });
+    // }
 
-    if(!ecr[app]) {
-        ecr[app] = {};
-    }
-    ecr[app][tag] = data;
+    // TODO
+    // if(!ecr[app]) {
+    //     ecr[app] = {};
+    // }
+    // ecr[app][tag] = data;
 
-    if(containers[app] && containers[app][tag]){
-        containers[app][tag].forEach(container => updateContainer(container, data));
-    }
-    if(services[app] && services[app][tag]){
-        updateService(services[app][tag], data);
-    }
+    // if(containers[app] && containers[app][tag]){
+    //     containers[app][tag].forEach(container => updateContainer(container, data));
+    // }
+    // if(services[app] && services[app][tag]){
+    //     updateService(services[app][tag], data);
+    // }
+}
+
+function updateTestProgress($test, test) {
+    var succeed = test.succeed / test.total * 100;
+    var skiped = test.skiped / test.total * 100;
+    var failed = test.failed / test.total * 100;
+    $test.find('.test-progress-succeed').css("width", succeed + "%");
+    $test.find('.test-progress-skiped').css("width", skiped + "%");
+    $test.find('.test-progress-failed').css("width", failed + "%");
 }
 
 function updateTest(test) {
     $test = $('#test-' + test.id);
     if($test.length) {
+        updateTestProgress($test, test);
+        
+        $test.find('.test-startTime').text(test.startTime);
+        $test.find('.test-endTime').text(test.endTime);
+        $test.find('.test-clientVersion').text(test.clientVersion);
+        $test.find('.test-serverVersion').text(test.serverVersion);
+        $test.find('.test-total').text(test.total);
+        $test.find('.test-succeed').text(test.succeed);
+        $test.find('.test-skiped').text(test.skiped);
+        $test.find('.test-failed').text(test.failed);
+
         return;
     }
     

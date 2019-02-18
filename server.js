@@ -5,25 +5,27 @@ const http = require('http');
 const https = require('https');
 const express = require('express');
 const session = require('express-session');
+const socketIo = require('socket.io')
 const fileUpload = require('express-fileupload');
 
-
-const config = JSON.parse(fs.readFileSync('config/config.json'));
-const logger = console;
-
-const api = require('./lib/api')(logger, config);
-const files = require('./lib/files')(logger, config);
-
-const privateKey = fs.readFileSync('ssl-dev/key.pem', 'utf8');
-const certificate = fs.readFileSync('ssl-dev/certificate.pem', 'utf8');
-const credentials = {key: privateKey, cert: certificate};
+var modules = {
+    logger: console,
+    config: JSON.parse(fs.readFileSync('config/config.json')),
+    permissions: JSON.parse(fs.readFileSync('config/permissions.json')),
+}
+modules.files = require('./lib/files')(modules);
+modules.registry = require('./lib/ecr')(modules);
+modules.model = require('./lib/model')(modules);
+modules.jenkins = require('./lib/jenkins')(modules);
+modules.search = require('./lib/search')(modules);
+modules.api = require('./lib/api')(modules);
+modules.websocket = require('./lib/websocket')(modules);
 
 const app = express();
 const port = process.env.PORT || 80;
-const secPort = process.env.SEC_PORT;
 
 process.on('uncaughtException', err => {
-    logger.error('Uncaught Exception: ' + err.stack);
+    modules.logger.error('Uncaught Exception: ' + err.stack);
 });
 
 function requiresLogin(req, res, next) {
@@ -62,7 +64,7 @@ app.post('/upload', function(req, res) {
 app.get('/api/*', requiresLogin, (req, res) => {
     let parts = req.path.split('/');
     let action = parts[2];
-    api.handle(req, res, action);
+    modules.api.handle(req, res, action);
 });
 
 app.use(express.json());
@@ -70,27 +72,25 @@ app.use(express.json());
 app.post('/api/login', (req, res) => {
     let parts = req.path.split('/');
     let action = parts[2];
-    api.handle(req, res, action, req.body);
+    modules.api.handle(req, res, action, req.body);
 });
 
 app.post('/api/*', requiresLogin, (req, res) => {
     let parts = req.path.split('/');
     let action = parts[2];
-    api.handle(req, res, action, req.body);
+    modules.api.handle(req, res, action, req.body);
 });
 
 app.get(['', '/', '/index.html'], (req, res) => {
     res.sendFile(path.join(__dirname, '/public', 'index.html'));
 });
   
-var httpServer = http.createServer(app);
+const httpServer = http.createServer(app);
+const io = socketIo(httpServer);
+io.on('connection', modules.websocket.onNewClient);
 httpServer.listen(port, () => {
-  logger.log(`Server running on port ${port}`);
+    modules.logger.log(`Server running on port ${port}`);
 });
 
-if(secPort) {
-    var httpsServer = https.createServer(credentials, app);
-    httpsServer.listen(secPort, () => {
-    logger.log(`Server running on port ${secPort}`);
-    });
-}
+modules.search.start(io);
+modules.registry.start(io);

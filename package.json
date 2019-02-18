@@ -17,6 +17,8 @@
     "express-session": "^1.15.6",
     "jenkins-api": "^0.3.1",
     "mongoose": "^5.4.6",
-    "unzip": "^0.1.11"
+    "socket.io": "^2.2.0",
+    "unzip": "^0.1.11",
+    "ws": "^6.1.3"
   }
 }

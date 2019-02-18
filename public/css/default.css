@@ -42,3 +42,14 @@ canvas {
 .demo{
     box-shadow: 0 4px 10px 0 red, 0 4px 20px 0 red
 }
+.progress-bar {
+    width: 0%; 
+    height: 10px; 
+    display: inline-block;
+    /* display: block; */
+    /* clear: left; */
+    /* margin: 0px;
+    border: 0px;
+    padding: 0px;
+    float: left; */
+}

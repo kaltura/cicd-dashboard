@@ -1,6 +1,18 @@
 <div class="card">
-    <div class="card-header bg-secondary text-white no-margin title">
-        <span data-content="name"></span> <span class="tag-version"></span>
+    <div class="card-header bg-secondary text-white no-margin text-nowrap title">
+        <img src="images/nobuilt.png" class="jenkins-status" data-alt="name"/>
+        <span data-content="name"></span>
     </div>
-    <div class="card-body collapse tag-tags"></div>
+    <div>
+        <div style="width: 95%;">
+            <div class="bg-success jenkins-progress" style="width: 0%; height: 5px;">&nbsp;</div>
+        </div>
+    </div>
+    <div class="card-body collapse tag-details">
+        <span class="tag-version"></span><br/>
+        <span class="tag-last-deploy"></span><br/>
+    </div>
+    <div class="card-footer">
+        <button class="deploy btn btn-secondary">Deploy</button>
+    </div>
 </div>

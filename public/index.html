@@ -8,22 +8,21 @@
     <link rel="stylesheet" type="text/css" href="css/jquery-ui.structure.min.css"/>
     <link rel="stylesheet" type="text/css" href="css/jquery-ui.theme.min.css"/>
     <link rel="stylesheet" type="text/css" href="css/default.css"/>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="js/jquery.min.js"></script>
     <script src="js/jquery-ui.min.js"></script>
     <script src="js/jquery.loadTemplate.min.js"></script>
     <script src="js/bootstrap.min.js"></script>
-    <script src="js/jcanvas.min.js"></script>
-    <script src="js/loaders.js"></script>
-    <script src="js/arrows.js"></script>
+    <script src="js/websocket.js"></script>
     <script src="js/ajax.js"></script>
+    <script src="js/loaders.js"></script>
     <script>
-
         $(function () {
             $.ajaxSetup ({
                 cache: false
             });
 
-            loadFlow();             
+            websocket.init();            
         });
     </script>
 </head>
