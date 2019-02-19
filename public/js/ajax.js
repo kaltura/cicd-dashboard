@@ -134,7 +134,9 @@ function updateCloudStatus(api, env, next) {
 function updateCloud(env) {
     updateCloudStatus("nodes", env, function() {
         updateCloudStatus("services", env, function() {
-            updateCloudStatus("containers", env);
+            updateCloudStatus("containers", env, function() {                
+                updateRegistryStatus(env);
+            });
         });
     })
 }

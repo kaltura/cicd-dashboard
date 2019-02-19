@@ -57,10 +57,25 @@ var socketHandler = {
 
     delete: function(type, id) {
         console.log('delete', type, id);
+        switch(type) {
+            case 'container':
+                $("#" + id).remove();
+                break;
+                
+            case 'service':
+                $("#" + id).remove();
+                break;
+            
+            case 'node':
+                $("." + id).remove();
+                break;
+        }
     },
 
     ecr: function(env, repositoryName, tag) {
-        console.log('ecr', env, repositoryName, tag);
+        tag.tags.forEach(function(currentTag) {
+            updateRegistryTag(env, repositoryName, currentTag, tag)
+        });
     },
 
     job: function(job) {
