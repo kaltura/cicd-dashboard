@@ -1,9 +1,4 @@
 
-var services = {};
-var containers = {};
-var envs = {};
-var ecr = {};
-
 var debug = null;
 
 function highlight($items) {
@@ -147,7 +142,6 @@ var loaders = {
     },
     
     env: function($html, data) {
-        envs[data.tag] = data.name;
         data.id = "env-" + data.tag;
         $html.attr("id", data.id);
         $html.attr("data-tag", data.tag);
@@ -277,19 +271,12 @@ var loaders = {
 
         $rollback = $html.find('.service-rollback');
         if(data.app) {
-            if(!services[data.app]){
-                services[data.app] = {};
-            }
-            services[data.app][data.tag] = serviceData;
-
             if(data.tag.match(/^\d+[.]\d+[.]\d+$/)) {
                 $version = $html.find('.service-version');
                 $version.text("(" + data.tag + ")");
                 $rollback.addClass('disabled');
             }
-            else if(ecr[data.app] && ecr[data.app][data.tag]){
-                updateService(serviceData, ecr[data.app][data.tag]);
-            }
+            // TODO update version and stable version
         }
         else {
             $rollback.addClass('disabled');
@@ -327,18 +314,7 @@ var loaders = {
         
         if(data.app) {
             loaders.app($html, data);
-        
-            if(!containers[data.app]){
-                containers[data.app] = {};
-            }
-            if(!containers[data.app][data.tag]){
-                containers[data.app][data.tag] = [];
-            }
-            containers[data.app][data.tag].push(data);
-                                
-            if(ecr[data.app] && ecr[data.app][data.tag]){
-                updateContainer(data, ecr[data.app][data.tag]);
-            }
+            // TODO update contaner status (is latest of ECR?)
         }
 
 
@@ -707,7 +683,6 @@ function updateRegistryTag(env, app, tag, data) {
     if(data.version) {
         var $version = $tag.find('.tag-version');
         $version.text("Version: " + data.version);
-        //     updateService(services[app][tag], data);
     }
 
     if(tag.match(/^((windows|linux)-)?latest$/)) {
