@@ -1,6 +1,4 @@
 
-var debug = null;
-
 function highlight($items) {
     $items.css("box-shadow", "0 2px 5px 0 #007bff, 0 2px 10px 0 #007bff");
 }
@@ -113,8 +111,11 @@ var loaders = {
     },
     
     tag: function($html, data) {
-        loaders.app($html, data);
+        loaders.app($html, data);        
         var id = "tag-" + data.tag + "-" + data.app;
+        if(data.tagPrefix) {
+            id += "-" + data.tagPrefix;
+        }
         $html.attr("id", id);
 
         var $tagsContainer = $html.find(".tag-details").first();
@@ -166,11 +167,10 @@ var loaders = {
             //         tag_to_roll_back: data.tag
             //     });
             // });
-            // TODO
-            // $envDeploy.click(function() {
-            //     buildJenkinsJob("Push-Tag-Docker", {
-            //     });
-            // });
+            
+            $envDeploy.click(function() {
+                deployRegistry(data);
+            });
         }
         else {
             $envDeploy.remove();
@@ -357,9 +357,6 @@ var loaders = {
 };
 
 function render(data, $parent) {
-    if(debug == data.type + "-" + data.name) {
-        console.log(data);
-    }
     if(!$parent) {
         $parent = $("#diagramContainer");
     }
@@ -376,20 +373,6 @@ function render(data, $parent) {
             }
         }
     });
-    
-    if(data.name) {
-        $html.hover(function() {
-            if(data.app) {
-                debug = data.type + "-" + data.app;
-            }
-            else {
-                debug = data.type + "-" + data.name;
-            }
-            console.log("Debug: " + debug);
-        }, function() {
-            debug = null;
-        });
-    }
 }
 
 function notify(type, title, message) {
@@ -581,9 +564,6 @@ function updateBuild($html, job) {
 
 function updateDeploy(deploy) {
     if(deploy.id == deploy.env) {
-        if(debug == "env-" + deploy.env) {
-            console.log(deploy);
-        }
         var $html = $("#env-" + deploy.env);
         if(deploy.status == "STARTED") {
             $html.find(".tag-jobs-status").attr("src", "images/blue_anime.gif");
@@ -597,9 +577,6 @@ function updateDeploy(deploy) {
             .replace(/[:-]latest$/, '')
             .replace(/:/, '-');
 
-        if(debug == "tag-" + app) {
-            console.log(deploy);
-        }
         var $html = $("#tag-" + app);
         if(deploy.status == "STARTED") {
             $html.find(".jenkins-status").attr("src", "images/blue_anime.gif");
@@ -613,9 +590,6 @@ function updateDeploy(deploy) {
 }
 
 function updateJenkinsJob(job) {
-    if(debug == "jenkins-" + job.jobName) {
-        console.log(job);
-    }
     var $html = $("#jenkins-" + job.jobName);
     if(job.status == "STARTED") {
         $html.find(".jenkins-status").attr("src", "images/blue_anime.gif");
@@ -675,11 +649,6 @@ function updateRegistryTag(env, app, tag, data) {
         return;
     }
 
-    var appType = app.replace(/^[^-]-/, '');
-    if((debug == "ecr-" + appType) || (debug == "tag-" + appType)) {
-        console.dir(data);
-    }
-       
     if(data.version) {
         var $version = $tag.find('.tag-version');
         $version.text("Version: " + data.version);
