@@ -93,5 +93,10 @@ var socketHandler = {
     deployBuild: function(build) {
         updateDeploy(build);
     },
+
+    test: function(build) {
+        console.log(build);
+        updateTest(build);
+    },
 };
 

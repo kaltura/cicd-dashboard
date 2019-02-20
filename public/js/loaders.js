@@ -221,18 +221,23 @@ var loaders = {
         
         updateTestProgress($html, data);
 
-        var url = "/reports/" + data.id + "/report/index.html";
-        $link = $html.find(".new-tab");
-        $link.attr("href", url);
-        
-        $fram = $html.find(".test-content");
-        $fram.attr("src", url);
-        
         var $body = $html.find(".test-body");
-        var $header = $html.find(".test-header");
-        $header.click(function() {
-            $body.collapse("toggle");
-        });
+        if(data.report) {
+            var url = "/reports/" + data.id + "/report/index.html";
+            $link = $html.find(".new-tab");
+            $link.attr("href", url);
+            
+            $fram = $html.find(".test-content");
+            $fram.attr("src", url);
+            
+            var $header = $html.find(".test-header");
+            $header.click(function() {
+                $body.collapse("toggle");
+            });
+        }
+        else {
+            $body.remove();
+        }
 
         $resizable = $html.find(".resizable");
         $resizable.resizable();
@@ -673,6 +678,11 @@ function updateTestProgress($test, test) {
 }
 
 function updateTest(test) {
+    test.type = 'test';
+    test.title = 'Core';
+    test.startTime = new Date(test.startTime).toUTCString();
+    test.endTime = test.endTime ? new Date(test.endTime).toUTCString() : '';
+
     $test = $('#test-' + test.id);
     if($test.length) {
         updateTestProgress($test, test);
@@ -696,9 +706,5 @@ function updateTest(test) {
     }
 
     var $testsResults = $env.find('.tests-results');
-    test.type = 'test';
-    test.title = 'Core';
-    test.startTime = new Date(test.startTime).toUTCString();
-    test.endTime = test.endTime ? new Date(test.endTime).toUTCString() : '';
     render(test, $testsResults);
 }
