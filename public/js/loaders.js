@@ -667,27 +667,27 @@ function updateTestProgress($test, test) {
     $test.find('.test-progress-skiped').css("width", skiped + "%");
     $test.find('.test-progress-failed').css("width", failed + "%");
     
-    var $body = $html.find(".test-body");
+    var $body = $test.find(".test-body");
     if(test.report) {
-        $html.find('.new-tab-img').show();
+        $test.find('.new-tab-img').show();
 
         var url = "/reports/" + test.id + "/report/index.html";
-        $link = $html.find(".new-tab");
+        $link = $test.find(".new-tab");
         $link.attr("href", url);
         
-        $fram = $html.find(".test-content");
+        $fram = $test.find(".test-content");
         $fram.attr("src", url);
         
-        var $header = $html.find(".test-header");
+        var $header = $test.find(".test-header");
         $header.click(function() {
             $body.collapse("toggle");
         });
         
-        $resizable = $html.find(".resizable");
+        $resizable = $test.find(".resizable");
         $resizable.resizable();
     }
     else {
-        $html.find('.new-tab-img').hide();
+        $test.find('.new-tab-img').hide();
     }
 }
 
