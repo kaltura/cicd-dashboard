@@ -9,9 +9,9 @@ var websocket = {
         });
     },
 
-    login: function(email, password) {
-        socket.emit("login", email, password);
-    },
+    // login: function(email, password) {
+    //     socket.emit("login", email, password);
+    // },
 
     listen: function(env) {
         socket.emit("listen", env);
@@ -23,25 +23,25 @@ var websocket = {
 };
 
 var socketHandler = {
-    flowBuilt: false,
+    // flowBuilt: false,
 
     connect: function() {
         console.log("Connected to server");
-        pop({type: "login"});
+        // pop({type: "login"});
     },
 
-    user: function(user) {
-        // console.log(user);
-    },
+    // user: function(user) {
+    //     // console.log(user);
+    // },
 
-    flow: function(data) {
-        if(!socketHandler.flowBuilt) {
-            socketHandler.flowBuilt = true;
-            data.forEach(function(item) {
-                render(item, null);
-            });
-        }
-    },
+    // flow: function(data) {
+    //     if(!socketHandler.flowBuilt) {
+    //         socketHandler.flowBuilt = true;
+    //         data.forEach(function(item) {
+    //             render(item);
+    //         });
+    //     }
+    // },
 
     container: function(data) {
         updateStatus(data);
@@ -95,7 +95,6 @@ var socketHandler = {
     },
 
     test: function(build) {
-        console.log(build);
         updateTest(build);
     },
 };

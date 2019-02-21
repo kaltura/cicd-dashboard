@@ -30,12 +30,24 @@ function toggleAll($items, action) {
 var loaders = {
     
     login: function($html, data) {
-        var $button = $html.find(".login");
-        $button.click(function() {
+        var $login = $html.find(".login");
+        $login.click(function() {
             var email = $("#email").val();
             var password = $("#pwd").val();
-            websocket.login(email, password);
-            api.login(email, password);
+            // websocket.login(email, password);
+            api.login(email, password, data.callback);
+        });
+        var $register = $html.find(".register");
+        $register.click(function() {
+            $html.find(".password").remove();
+            $html.find(".login").remove();
+            $html.find(".register").remove();
+            $html.find(".mail").collapse('show');
+        });
+        var $mail = $html.find(".mail");
+        $mail.click(function() {
+            var email = $("#email").val();
+            api.register(email);
         });
     },
     
@@ -77,7 +89,7 @@ var loaders = {
         }
 
         $itemsContainer.on('shown.bs.collapse', function() {
-            updateJenkinsStatus();
+            api.updateJenkinsStatus();
             $itemsContainer
                 .find(".env:visible")
                 .each(function() {
@@ -85,7 +97,7 @@ var loaders = {
                     var env = $env.attr('data-tag');
                     websocket.listen(env);
                     updateCloud(env);
-                    updateTests(env);
+                    api.updateTests(env);
                 });
         });
 
@@ -128,12 +140,12 @@ var loaders = {
         if(data.jobName) {
             $buildButten.text('Build');
             $buildButten.click(function() {
-                buildJenkinsJob(data.jobName, data.parameters);
+                api.buildJenkinsJob(data.jobName, data.parameters);
             });
         }
         else if(data.src) {
             $buildButten.click(function() {
-                deployRegistry(data);
+                api.deployRegistry(data);
             });
         }
         else {
@@ -163,13 +175,13 @@ var loaders = {
         if(data.src) {
             // TODO
             // $envRollback.click(function() {
-            //     buildJenkinsJob("Rollback-Tag-Docker", {
+            //     api.buildJenkinsJob("Rollback-Tag-Docker", {
             //         tag_to_roll_back: data.tag
             //     });
             // });
             
             $envDeploy.click(function() {
-                deployRegistry(data);
+                api.deployRegistry(data);
             });
         }
         else {
@@ -212,7 +224,7 @@ var loaders = {
         var $buildButten = $html.find(".deploy");
         $buildButten.click(function() {
             console.log(data);
-            buildJenkinsJob("Tag-Docker-" + data.os, data.parameters);
+            api.buildJenkinsJob("Tag-Docker-" + data.os, data.parameters);
         });
     },
 
@@ -258,7 +270,7 @@ var loaders = {
         var $buildButten = $html.find(".build");
         $buildButten.click(function() {
             $html.find(".jenkins-status").attr("src", "images/in_queue.png");
-            buildJenkinsJob(data.name, data.parameters);
+            api.buildJenkinsJob(data.name, data.parameters);
         });
     },
 
@@ -299,7 +311,7 @@ var loaders = {
             //             }
             //         });
             //     }
-            // buildJenkinsJob("Rollback-Tag-Docker-" + os, {
+            // api.buildJenkinsJob("Rollback-Tag-Docker-" + os, {
             //     tag_to_roll_back: data.env
             // })
         });

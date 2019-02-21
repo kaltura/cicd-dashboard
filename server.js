@@ -4,15 +4,22 @@ const path = require('path');
 const http = require('http');
 const https = require('https');
 const express = require('express');
-const session = require('express-session');
 const socketIo = require('socket.io')
 const fileUpload = require('express-fileupload');
+const sharedsession = require("express-socket.io-session");
+
+const session = require('express-session')({
+    secret: 'OTT fun',
+    resave: true,
+    saveUninitialized: false
+});
 
 var modules = {
     logger: console,
     config: JSON.parse(fs.readFileSync('config/config.json')),
     permissions: JSON.parse(fs.readFileSync('config/permissions.json')),
 }
+modules.mail = require('./lib/mail')(modules);
 modules.files = require('./lib/files')(modules);
 modules.registry = require('./lib/ecr')(modules);
 modules.model = require('./lib/model')(modules);
@@ -38,11 +45,7 @@ function requiresLogin(req, res, next) {
     }
 }
 
-app.use(session({
-    secret: 'OTT fun',
-    resave: true,
-    saveUninitialized: false
-}));
+app.use(session);
 
 app.use((req, res, next) => {
     res.header("Access-Control-Allow-Origin", "*");
@@ -69,17 +72,15 @@ app.get('/api/*', requiresLogin, (req, res) => {
 
 app.use(express.json());
   
-app.post('/api/login', (req, res) => {
+const apiHandler = (req, res) => {
     let parts = req.path.split('/');
     let action = parts[2];
     modules.api.handle(req, res, action, req.body);
-});
+}
 
-app.post('/api/*', requiresLogin, (req, res) => {
-    let parts = req.path.split('/');
-    let action = parts[2];
-    modules.api.handle(req, res, action, req.body);
-});
+app.post('/api/login', apiHandler);
+app.post('/api/register', apiHandler);
+app.post('/api/*', requiresLogin, apiHandler);
 
 app.get(['', '/', '/index.html'], (req, res) => {
     res.sendFile(path.join(__dirname, '/public', 'index.html'));
@@ -87,6 +88,9 @@ app.get(['', '/', '/index.html'], (req, res) => {
   
 const httpServer = http.createServer(app);
 const io = socketIo(httpServer);
+io.use(sharedsession(session, {
+    autoSave:true
+})); 
 io.on('connection', modules.websocket.onNewClient);
 httpServer.listen(port, () => {
     modules.logger.log(`Server running on port ${port}`);
