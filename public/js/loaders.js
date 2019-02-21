@@ -232,27 +232,6 @@ var loaders = {
         $html.attr("id", "test-" + data.id);
         
         updateTestProgress($html, data);
-
-        var $body = $html.find(".test-body");
-        if(data.report) {
-            var url = "/reports/" + data.id + "/report/index.html";
-            $link = $html.find(".new-tab");
-            $link.attr("href", url);
-            
-            $fram = $html.find(".test-content");
-            $fram.attr("src", url);
-            
-            var $header = $html.find(".test-header");
-            $header.click(function() {
-                $body.collapse("toggle");
-            });
-        }
-        else {
-            $body.remove();
-        }
-
-        $resizable = $html.find(".resizable");
-        $resizable.resizable();
     },
 
     jenkins: function($html, data) {
@@ -687,6 +666,29 @@ function updateTestProgress($test, test) {
     $test.find('.test-progress-succeed').css("width", succeed + "%");
     $test.find('.test-progress-skiped').css("width", skiped + "%");
     $test.find('.test-progress-failed').css("width", failed + "%");
+    
+    var $body = $html.find(".test-body");
+    if(data.report) {
+        $html.find('.new-tab-img').show();
+
+        var url = "/reports/" + data.id + "/report/index.html";
+        $link = $html.find(".new-tab");
+        $link.attr("href", url);
+        
+        $fram = $html.find(".test-content");
+        $fram.attr("src", url);
+        
+        var $header = $html.find(".test-header");
+        $header.click(function() {
+            $body.collapse("toggle");
+        });
+        
+        $resizable = $html.find(".resizable");
+        $resizable.resizable();
+    }
+    else {
+        $html.find('.new-tab-img').hide();
+    }
 }
 
 function updateTest(test) {
