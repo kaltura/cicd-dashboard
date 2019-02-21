@@ -98,6 +98,10 @@ var loaders = {
                     websocket.listen(env);
                     updateCloud(env);
                     api.updateTests(env);
+                    var src = $env.attr('data-src');
+                    if(src) {
+                        api.updateRegistryStatus(src);
+                    }
                 });
         });
 
@@ -136,6 +140,14 @@ var loaders = {
             $tagsContainer.collapse("toggle");                    
         });
         
+        var $select = $html.find(".deploy-version");
+        if(data.versionRegex) {
+            $select.attr('data-regex', data.versionRegex);
+        }
+        else {
+            $select.remove();
+        }
+
         var $buildButten = $html.find(".deploy");
         if(data.jobName) {
             $buildButten.text('Build');
@@ -144,7 +156,12 @@ var loaders = {
             });
         }
         else if(data.src) {
+            $html.addClass("src-" + data.src + "-" + data.app);
             $buildButten.click(function() {
+                $select = $html.find(".deploy-version");
+                if($select.length) {
+                    data.from_image = data.src + "-" + data.app + ":" + $select.val();
+                }
                 api.deployRegistry(data);
             });
         }
@@ -173,6 +190,7 @@ var loaders = {
         var $envDeploy = $html.find(".env-deploy");
         var $envRollback = $html.find(".env-rollback");
         if(data.src) {
+            $html.attr("data-src", data.src);
             // TODO
             // $envRollback.click(function() {
             //     api.buildJenkinsJob("Rollback-Tag-Docker", {
@@ -624,6 +642,24 @@ function updateRegistryTag(env, app, tag, data) {
         updateService($service, data.version);
     }
 
+    // TODO handle _stable tags
+
+    var $destinationTags = $(".src-" + app);
+    if($destinationTags.length) {
+        var $select = $destinationTags.find(".deploy-version");
+        var versionRegex = $select.attr('data-regex');
+        if(versionRegex) {
+            console.log(versionRegex, tag);
+            versionRegex = new RegExp(versionRegex);
+            var value = (data.version ? `${tag} (${data.version})` : tag);
+            if(tag.match(versionRegex) && $select.find("option[value='" + tag + "']").length == 0) {
+                $select.append("<option value=\"" + tag + "\">" + value + "</option>");
+                $destinationTags.find(".deploy").removeAttr("disabled");
+            }
+            $destinationTags = null;
+        }
+    }
+
     if(!tag.match(/latest$/)) {
         return;
     }
@@ -637,8 +673,6 @@ function updateRegistryTag(env, app, tag, data) {
         data.tagPrefix = "windows";
     }
 
-    // TODO handle _stable tags
-
     var $tag = $("#tag-" + app);
     if(!$tag.length) {
         console.log("Tag not found: #tag-" + app);
@@ -651,6 +685,11 @@ function updateRegistryTag(env, app, tag, data) {
     }
 
     if(tag.match(/^((windows|linux)-)?latest$/)) {
+        if(data.version && $destinationTags) {
+            $destinationTags.find('.deploy')
+                .text('Deploy ' + data.version)
+                .removeAttr("disabled");
+        }
         $containers = $(".container.app-" + app);
         $containers.each(function() {
             $container = $(this);
