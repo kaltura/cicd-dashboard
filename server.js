@@ -61,7 +61,7 @@ app.use(fileUpload({
 }));
 
 app.post('/upload', function(req, res) {
-    files.upload(req.body, req.files, res); // the uploaded file object
+    modules.files.upload(req.body, req.files, res); // the uploaded file object
 });
 
 app.get('/api/*', requiresLogin, (req, res) => {
