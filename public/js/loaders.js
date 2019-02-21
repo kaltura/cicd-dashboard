@@ -668,10 +668,10 @@ function updateTestProgress($test, test) {
     $test.find('.test-progress-failed').css("width", failed + "%");
     
     var $body = $html.find(".test-body");
-    if(data.report) {
+    if(test.report) {
         $html.find('.new-tab-img').show();
 
-        var url = "/reports/" + data.id + "/report/index.html";
+        var url = "/reports/" + test.id + "/report/index.html";
         $link = $html.find(".new-tab");
         $link.attr("href", url);
         
