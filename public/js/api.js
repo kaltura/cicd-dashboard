@@ -109,7 +109,15 @@ var api = {
         api.jobsLoaded = true;
         $.ajax("api/jobs", {
             success: function(data) {
-                data.forEach(job => updateJenkinsJob(job));
+                if(data) {
+                    data.forEach(job => updateJenkinsJob(job));
+                }
+                else {
+                    api.jobsLoaded = false;
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                api.jobsLoaded = false;
             }
         });
     },
