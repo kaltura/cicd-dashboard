@@ -703,6 +703,9 @@ function updateTestProgress($test, test) {
     $test.find('.test-progress-succeed').css("width", succeed + "%");
     $test.find('.test-progress-skiped').css("width", skiped + "%");
     $test.find('.test-progress-failed').css("width", failed + "%");
+    $test.find('.test-progress-succeed').attr("title", succeed + "%");
+    $test.find('.test-progress-skiped').attr("title", skiped + "%");
+    $test.find('.test-progress-failed').attr("title", failed + "%");
     
     var $body;
     if(test.report) {
