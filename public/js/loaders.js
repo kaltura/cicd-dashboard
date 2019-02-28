@@ -708,12 +708,12 @@ function updateTestProgress($test, test) {
     if(test.report) {
         $test.find('.new-tab-img').show();
 
-        var url = "/reports/" + test.id + "/report/index.html";
-        $link = $test.find(".new-tab");
-        $link.attr("href", url);
+        // var url = "/reports/" + test.id + "/report/index.html";
+        // $link = $test.find(".new-tab");
+        // $link.attr("href", url);
         
-        $fram = $test.find(".test-content");
-        $fram.attr("src", url);
+        // $fram = $test.find(".test-content");
+        // $fram.attr("src", url);
                 
         $resizable = $test.find(".resizable");
         $resizable.resizable();
@@ -727,7 +727,6 @@ function updateTestProgress($test, test) {
 
     var $header = $test.find(".test-header");
     $header.click(function() {
-        console.log('CLICK');
         $body.collapse("toggle");
     });
 }
