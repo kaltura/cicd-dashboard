@@ -241,7 +241,6 @@ var loaders = {
 
         var $buildButten = $html.find(".deploy");
         $buildButten.click(function() {
-            console.log(data);
             api.buildJenkinsJob("Tag-Docker-" + data.os, data.parameters);
         });
     },
@@ -649,7 +648,6 @@ function updateRegistryTag(env, app, tag, data) {
         var $select = $destinationTags.find(".deploy-version");
         var versionRegex = $select.attr('data-regex');
         if(versionRegex) {
-            console.log(versionRegex, tag);
             versionRegex = new RegExp(versionRegex);
             var value = (data.version ? `${tag} (${data.version})` : tag);
             if(tag.match(versionRegex) && $select.find("option[value='" + tag + "']").length == 0) {
@@ -706,7 +704,7 @@ function updateTestProgress($test, test) {
     $test.find('.test-progress-skiped').css("width", skiped + "%");
     $test.find('.test-progress-failed').css("width", failed + "%");
     
-    var $body = $test.find(".test-body");
+    var $body;
     if(test.report) {
         $test.find('.new-tab-img').show();
 
@@ -716,18 +714,22 @@ function updateTestProgress($test, test) {
         
         $fram = $test.find(".test-content");
         $fram.attr("src", url);
-        
-        var $header = $test.find(".test-header");
-        $header.click(function() {
-            $body.collapse("toggle");
-        });
-        
+                
         $resizable = $test.find(".resizable");
         $resizable.resizable();
+
+        $body = $test.find(".test-data");
     }
     else {
         $test.find('.new-tab-img').hide();
+        $body = $test.find(".test-info");
     }
+
+    var $header = $test.find(".test-header");
+    $header.click(function() {
+        console.log('CLICK');
+        $body.collapse("toggle");
+    });
 }
 
 function updateTest(test) {

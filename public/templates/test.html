@@ -1,15 +1,18 @@
-<div class="card">
-    <div class="test-header card-header bg-secondary text-white no-margin text-nowrap" data-placement="top" title="">
+<div class="card" style="margin-top: 10px">
+    <div class="card-header bg-secondary text-white no-margin text-nowrap" data-placement="top" title="">
         <a class="new-tab" target="_blank">
             <img src="images/new_window.png" height="30" alt="New Tab" class="new-tab-img" />
-            <span class="title text-white" data-content="title"></span>
         </a>
+        <div class="test-header" style="width: 90%">
+            <span class="test-id" data-content="id"></span>
+            <span class="test-startTime" data-content="startTime"></span>
+        </div>
     </div>
     <div class="no-margin text-nowrap" style="width: 100%; height: 10px;"><div class="bg-success test-progress-succeed progress-bar">&nbsp;</div><div class="bg-warning test-progress-skiped progress-bar">&nbsp;</div><div class="bg-danger test-progress-failed progress-bar">&nbsp;</div></div>
-    <div class="card-body test-body collapse">
+    <div class="card-body test-data collapse">
         <div class="resizable" style="height: 500px;"><iframe width="100%" height="100%" class="test-content"></iframe></div>
     </div>
-    <div class="card-footer">
+    <div class="card-footer test-data test-info collapse">
         <ul>
             <li class="text-nowrap"><span class="font-weight-bold">ID</span>: <span class="test-id" data-content="id"></span></li>
             <li class="text-nowrap"><span class="font-weight-bold">Start</span>: <span class="test-startTime" data-content="startTime"></span></li>

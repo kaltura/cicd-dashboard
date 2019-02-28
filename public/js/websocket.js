@@ -23,25 +23,9 @@ var websocket = {
 };
 
 var socketHandler = {
-    // flowBuilt: false,
-
     connect: function() {
         console.log("Connected to server");
-        // pop({type: "login"});
     },
-
-    // user: function(user) {
-    //     // console.log(user);
-    // },
-
-    // flow: function(data) {
-    //     if(!socketHandler.flowBuilt) {
-    //         socketHandler.flowBuilt = true;
-    //         data.forEach(function(item) {
-    //             render(item);
-    //         });
-    //     }
-    // },
 
     container: function(data) {
         updateStatus(data);
@@ -56,7 +40,6 @@ var socketHandler = {
     },
 
     delete: function(type, id) {
-        console.log('delete', type, id);
         switch(type) {
             case 'container':
                 $("#" + id).remove();
