@@ -369,7 +369,7 @@ var loaders = {
     }
 };
 
-function render(data, $parent) {
+function render(data, $parent, prepend) {
     if(!$parent) {
         $parent = $("#diagramContainer");
     }
@@ -378,7 +378,12 @@ function render(data, $parent) {
     if(data.classes) {
         data.classes.forEach(clazz => $html.addClass(clazz));
     }
-    $parent.append($html);
+    if(prepend) {
+        $parent.prepend($html);
+    }
+    else {
+        $parent.append($html);
+    }
     $html.loadTemplate("templates/" + data.type + ".html", data, {                    
         complete: function() {
             if(loaders[data.type]) {
@@ -763,5 +768,5 @@ function updateTest(test) {
     }
 
     var $testsResults = $env.find('.tests-results');
-    render(test, $testsResults);
+    render(test, $testsResults, true);
 }
