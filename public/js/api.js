@@ -172,7 +172,39 @@ var api = {
                 }	
             }	
         });	
-    }	    
+    },
+    
+    'accept-register': function({email}) {
+        $.ajax("api/roles", {
+            success: function(roles) {
+                render({
+                    type: 'accept-register',
+                    roles: roles,
+                    email: email
+                });
+            },	
+            error: function(jqXHR, textStatus, errorThrown) {	
+                if(jqXHR.status == 401) {	
+                    pop({	
+                        type: "login",	
+                        callback: function() {
+                            api["accept-register"]({email: email});
+                        }	
+                    });	
+                }	
+            }	
+        });	
+        // $.ajax("api/accept-register", {
+        //     method: "POST",
+        //     contentType: "application/json; charset=utf-8",
+        //     data: JSON.stringify({
+        //         token: token
+        //     }),
+        //     success: function(email) {
+        //         notifySuccess("Registration", "Accepted for e-mail: " + email);
+        //     }
+        // });
+    }
 };
 
 function updateCloud(env) {
