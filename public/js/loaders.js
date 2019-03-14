@@ -32,14 +32,14 @@ var loaders = {
     login: function($html, data) {
         var $login = $html.find(".login");
         $login.click(function() {
-            var email = $("#email").val();
-            var password = $("#pwd").val();
+            var email = $html.find("input.email").val();
+            var password = $html.find("input.password").val();
             // websocket.login(email, password);
             api.login(email, password, data.callback);
         });
         var $forgot = $html.find(".forgot");
         $forgot.click(function() {
-            var email = $("#email").val();
+            var email = $html.find("input.email").val();
             api.forgotPassword(email);
         });
         var $register = $html.find(".register");
@@ -51,7 +51,7 @@ var loaders = {
         });
         var $mail = $html.find(".mail");
         $mail.click(function() {
-            var email = $("#email").val();
+            var email = $html.find("input.email").val();
             api.register(email);
         });
     },
