@@ -38,11 +38,17 @@ process.on('uncaughtException', err => {
 function requiresLogin(req, res, next) {
     if (req.session && req.session.user) {
         return next();
-    } else {
-        var err = new Error('You must be logged in to view this page.');
-        err.status = 401;
-        return next(err);
     }
+    
+    let parts = req.path.split('/');
+    let action = parts[2];
+    if(modules.permissions.Anonymous[action]) {
+        return next();
+    }
+
+    var err = new Error('You must be logged in to view this page.');
+    err.status = 401;
+    return next(err);
 }
 
 app.use(session);
@@ -78,8 +84,6 @@ const apiHandler = (req, res) => {
     modules.api.handle(req, res, action, req.body);
 }
 
-app.post('/api/login', apiHandler);
-app.post('/api/register', apiHandler);
 app.post('/api/*', requiresLogin, apiHandler);
 
 app.get(['', '/', '/index.html'], (req, res) => {

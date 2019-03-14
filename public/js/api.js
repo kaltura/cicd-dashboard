@@ -10,9 +10,9 @@ var api = {
                 email: email,
                 password: password
             }),
-            success: function() {
+            success: function(user) {
                 if(callback) {
-                    callback();
+                    callback(user);
                 }
             },
             error: function(jqXHR, textStatus, errorThrown) {
@@ -23,6 +23,23 @@ var api = {
                         callback: callback
                     });
                 }
+            }
+        });
+    },
+
+    forgotPassword: function(email) {    
+    
+        $.ajax("api/forgotPassword", {
+            method: "POST",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({
+                email: email
+            }),
+            success: function() {
+                notifySuccess("E-mail was sent");
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                notifyError("Failed to reset password: " + errorThrown);
             }
         });
     },
@@ -194,17 +211,58 @@ var api = {
                 }	
             }	
         });	
-        // $.ajax("api/accept-register", {
-        //     method: "POST",
-        //     contentType: "application/json; charset=utf-8",
-        //     data: JSON.stringify({
-        //         token: token
-        //     }),
-        //     success: function(email) {
-        //         notifySuccess("Registration", "Accepted for e-mail: " + email);
-        //     }
-        // });
-    }
+    },
+
+    createUser: function(email, role) {
+        $.ajax("api/createUser", {
+            method: "POST",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({
+                email: email,
+                role: role
+            }),
+            success: function() {
+                notifySuccess("Registration", "User created e-mail: " + email, {
+                    Close: function() {
+                        window.close();
+                    }
+                });
+            },	
+            error: function(jqXHR, textStatus, errorThrown) {
+                notifyError("Registration", "Failed to create user for e-mail: " + email);
+            }
+        });
+    },
+
+    'update-info': function() {
+        pop({	
+            type: "login",	
+            callback: function(user) {
+                console.log(user);
+                pop({
+                    type: 'update-info',
+                    username: user.username
+                });
+            }	
+        });	
+    },
+
+    updateUser: function(username, password) {
+        $.ajax("api/updateUser", {
+            method: "POST",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({
+                username: username,
+                password: password
+            }),
+            success: function() {
+                notifySuccess("Registration", "User details updated");
+            },	
+            error: function(jqXHR, textStatus, errorThrown) {
+                notifyError("Registration", "Failed to update user details");
+            }
+        });
+    },
 };
 
 function updateCloud(env) {

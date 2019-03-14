@@ -37,6 +37,11 @@ var loaders = {
             // websocket.login(email, password);
             api.login(email, password, data.callback);
         });
+        var $forgot = $html.find(".forgot");
+        $forgot.click(function() {
+            var email = $("#email").val();
+            api.forgotPassword(email);
+        });
         var $register = $html.find(".register");
         $register.click(function() {
             $html.find(".password").remove();
@@ -366,7 +371,23 @@ var loaders = {
     "v-repeater": function($html, data) {
         var $itemsContainer = $html.find(".items").first();
         loaders.vItems($itemsContainer, data.items);
-    }
+    },
+
+    'accept-register': function($html, data) {
+        var $accept = $html.find(".accept");
+        $accept.click(function() {
+            api.createUser(data.email, $html.find(".user-role").val());
+        });
+    },
+
+    'update-info': function($html, data) {
+        var $save = $html.find(".save");
+        $save.click(function() {
+            api.updateUser($html.find("input.username").val(), $html.find("input.password").val());
+            api.loadFlow();
+            location.hash = "";
+        });
+    },
 };
 
 function render(data, $parent, prepend) {
