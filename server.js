@@ -39,13 +39,7 @@ function requiresLogin(req, res, next) {
     let parts = req.path.split('/');
     let action = parts[2];
 
-    if (req.session && req.session.user && req.session.user.permissions) {
-        if(req.session.user.permissions === '*' || req.session.user.permissions[action]) {
-            return next();
-        }        
-    }
-    
-    if(modules.permissions.Anonymous[action]) {
+    if(modules.api.hasPermission(req, action)) {
         return next();
     }
 

@@ -11,6 +11,8 @@ var api = {
                 password: password
             }),
             success: function(user) {
+                user.type = "user-header";
+                render(user, $("#userDetails"));
                 if(callback) {
                     callback(user);
                 }
@@ -61,12 +63,13 @@ var api = {
         });
     },
 
-    buildJenkinsJob: function(name, parameters) {
+    buildJenkinsJob: function(name, parameters, env) {
         $.ajax("api/build", {
             method: "POST",
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify({
                 job: name,
+                env: env,
                 parameters: parameters
             }),
             success: function() {
@@ -173,12 +176,37 @@ var api = {
     },
     
     loadFlow: function() {
+        $("#diagramContainer").empty();
         $.ajax("api/flow", {
             success: function(flow) {
                 flow.forEach(function(item) {	
                     render(item);	
                 });
                 websocket.init();
+            }	
+        });	
+    },
+    
+    logout: function() {
+        $("#userDetails").empty();
+        $("#diagramContainer").empty();
+        $.ajax("api/logout", {
+            success: function() {
+                pop({	
+                    type: "login",	
+                    callback: api.loadFlow	
+                });
+            }	
+        });	
+    },
+    
+    getUser: function() {
+        $("#diagramContainer").empty();
+        $.ajax("api/user", {
+            success: function(user) {
+                user.type = "user-header";
+                render(user, $("#userDetails"));
+                api.loadFlow();
             },	
             error: function(jqXHR, textStatus, errorThrown) {	
                 if(jqXHR.status == 401) {	
@@ -269,21 +297,82 @@ var api = {
         });	
     },
 
-    updateUser: function(username, password) {
+    updateMyDetails: function(user) {
+        $.ajax("api/updateMyDetails", {
+            method: "POST",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify(user),
+            success: function() {
+                notifySuccess("User Details", "User details updated");
+            },	
+            error: function(jqXHR, textStatus, errorThrown) {
+                notifyError("User Details", "Failed to update user details");
+            }
+        });
+    },
+
+    updateUser: function(email, user) {
         $.ajax("api/updateUser", {
             method: "POST",
             contentType: "application/json; charset=utf-8",
             data: JSON.stringify({
-                username: username,
-                password: password
+                email: email,
+                user: user
             }),
             success: function() {
-                notifySuccess("Registration", "User details updated");
+                notifySuccess("User Update", "User details updated");
             },	
             error: function(jqXHR, textStatus, errorThrown) {
-                notifyError("Registration", "Failed to update user details");
+                notifyError("User Update", "Failed to update user details");
             }
         });
+    },
+
+    deleteUser: function(email, callback) {
+        $.ajax("api/deleteUser", {
+            method: "POST",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({
+                email: email
+            }),
+            success: function() {
+                callback();
+                notifySuccess("User Delete", "User deleted");
+            },	
+            error: function(jqXHR, textStatus, errorThrown) {
+                notifyError("User Delete", "Failed to delete user");
+            }
+        });
+    },
+
+    impersonateUser: function(email) {
+        $.ajax("api/impersonateUser", {
+            method: "POST",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({
+                email: email
+            }),
+            success: function(user) {
+                $("#userDetails").empty();
+                user.type = "user-header";
+                render(user, $("#userDetails"));
+                api.loadFlow();
+            },	
+            error: function(jqXHR, textStatus, errorThrown) {
+                notifyError("User Impersonation", "Failed to impersonate");
+            }
+        });
+    },
+
+    unimpersonate: function() {
+        $.ajax("api/unimpersonateUser", {
+            success: function(user) {
+                $("#userDetails").empty();
+                user.type = "user-header";
+                render(user, $("#userDetails"));
+                api.loadFlow();
+            }	
+        });	
     },
 };
 

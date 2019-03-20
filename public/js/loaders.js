@@ -155,9 +155,10 @@ var loaders = {
 
         var $buildButten = $html.find(".deploy");
         if(data.jobName) {
+            $buildButten.removeAttr("disabled");
             $buildButten.text('Build');
             $buildButten.click(function() {
-                api.buildJenkinsJob(data.jobName, data.parameters);
+                api.buildJenkinsJob(data.jobName, data.parameters, data.tag);
             });
         }
         else if(data.src) {
@@ -196,12 +197,9 @@ var loaders = {
         var $envRollback = $html.find(".env-rollback");
         if(data.src) {
             $html.attr("data-src", data.src);
-            // TODO
-            // $envRollback.click(function() {
-            //     api.buildJenkinsJob("Rollback-Tag-Docker", {
-            //         tag_to_roll_back: data.tag
-            //     });
-            // });
+            $envRollback.click(function() {
+                api.buildJenkinsJob("Rollback-Tag-Docker-" + data.tag, null, data.tag);
+            });
             
             $envDeploy.click(function() {
                 api.deployRegistry(data);
@@ -301,20 +299,20 @@ var loaders = {
         }
         
         $rollback.click(function() {
-            // var os = "Linux";
-            // if(    data.Spec 
-            //     && data.Spec.TaskTemplate
-            //     && data.Spec.TaskTemplate.Placement
-            //     && data.Spec.TaskTemplate.Placement.Constraints) {
-            //         data.Spec.TaskTemplate.Placement.Constraints.forEach(function(constraint) {
-            //             if(constraint.match(/node.platform.os\s?==\s?windows/)) {
-            //                 os = "Windows";   
-            //             }
-            //         });
-            //     }
-            // api.buildJenkinsJob("Rollback-Tag-Docker-" + os, {
-            //     tag_to_roll_back: data.env
-            // })
+            var os = "Linux";
+            if(    data.Spec 
+                && data.Spec.TaskTemplate
+                && data.Spec.TaskTemplate.Placement
+                && data.Spec.TaskTemplate.Placement.Constraints) {
+                    data.Spec.TaskTemplate.Placement.Constraints.forEach(function(constraint) {
+                        if(constraint.match(/node.platform.os\s?==\s?windows/)) {
+                            os = "Windows";   
+                        }
+                    });
+                }
+            api.buildJenkinsJob("Rollback-Tag-Docker-" + os, {
+                tag_to_roll_back: data.env
+            })
         });
     },
 
@@ -383,13 +381,28 @@ var loaders = {
     'update-info': function($html, data) {
         var $save = $html.find(".save");
         $save.click(function() {
-            api.updateUser({
+            api.updateMyDetails({
                 username: $html.find("input.username").val(), 
                 password: $html.find("input.password").val()
             });
             api.loadFlow();
             location.hash = "";
         });
+    },
+
+    'user-header': function($html, data) {
+        var $logout = $html.find(".logout");
+        $logout.click(function() {
+            api.logout();
+        });
+        
+        if(data.master) {
+            var $unimpersonate = $html.find(".unimpersonate");
+            $unimpersonate.collapse("show");
+            $unimpersonate.click(function() {
+                api.unimpersonate();
+            });
+        }
     },
 
     users: function($html, data) {        
@@ -405,11 +418,12 @@ var loaders = {
 
     user: function($html, data) {        
         var $role = $html.find(".role");
-        // TODO
-        
+
         var $delete = $html.find(".delete");
-        $delete.click(function() {
-            api.deleteUser(data.email);
+        $delete.click(function() {            
+            api.deleteUser(data.email, function() {
+                $html.remove();
+            });
         });
 
         var $impersonate = $html.find(".impersonate");
@@ -419,8 +433,18 @@ var loaders = {
 
         var $update = $html.find(".update");
         $update.click(function() {
-            // TODO
-            api.updateUser(data.email);
+            api.updateUser(data.email, {
+                userRole: $role.val()
+            });
+        });
+        
+        $role.change(function() {
+            if($role.val() === data.userRole) {
+                $update.collapse("hide");
+            }
+            else {
+                $update.collapse("show");
+            }
         });
     }
 };

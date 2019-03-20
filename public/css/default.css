@@ -53,6 +53,9 @@ canvas {
     padding: 0px;
     float: left; */
 }
-.accept-register{
+.accept-register {
     padding: 70px;
+}
+#frame-Jenkins {
+    padding-top: 30px;
 }

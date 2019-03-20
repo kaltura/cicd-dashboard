@@ -41,13 +41,14 @@
                 method(parseQuery());
             }
             else {
-                api.loadFlow();
+                api.getUser();
             }
         });
     </script>
 </head>
 <body>
     <div id="notificationsContainer" class="fixed-top"></div>
+    <div id="userDetails" class="card"></div>
     <div id="diagramContainer" class="card"></div>
 </body>
 </html>
