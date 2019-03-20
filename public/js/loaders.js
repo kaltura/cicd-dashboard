@@ -383,28 +383,69 @@ var loaders = {
     'update-info': function($html, data) {
         var $save = $html.find(".save");
         $save.click(function() {
-            api.updateUser($html.find("input.username").val(), $html.find("input.password").val());
+            api.updateUser({
+                username: $html.find("input.username").val(), 
+                password: $html.find("input.password").val()
+            });
             api.loadFlow();
             location.hash = "";
         });
     },
+
+    users: function($html, data) {        
+        var $body = $html.find(".users-body");
+        var $header = $html.find(".title");
+        $header.click(function() {
+            $body.collapse("toggle");
+        });
+
+        var $itemsContainer = $html.find(".items").first();
+        api.loadUsers($itemsContainer);
+    },
+
+    user: function($html, data) {        
+        var $role = $html.find(".role");
+        // TODO
+        
+        var $delete = $html.find(".delete");
+        $delete.click(function() {
+            api.deleteUser(data.email);
+        });
+
+        var $impersonate = $html.find(".impersonate");
+        $impersonate.click(function() {
+            api.impersonateUser(data.email);
+        });
+
+        var $update = $html.find(".update");
+        $update.click(function() {
+            // TODO
+            api.updateUser(data.email);
+        });
+    }
 };
 
-function render(data, $parent, prepend) {
+function render(data, $parent, options) {
     if(!$parent) {
         $parent = $("#diagramContainer");
     }
-    var $html = $("<div/>");
-    $html.addClass(data.type);
-    if(data.classes) {
-        data.classes.forEach(clazz => $html.addClass(clazz));
+
+    var $html = $parent;
+    if(!options || !options.dontWrap) {
+        $html = $("<div/>");
+        $html.addClass(data.type);    
+        if(data.classes) {
+            data.classes.forEach(clazz => $html.addClass(clazz));
+        }
     }
-    if(prepend) {
+
+    if(options && options.prepend) {
         $parent.prepend($html);
     }
     else {
         $parent.append($html);
     }
+
     $html.loadTemplate("templates/" + data.type + ".html", data, {                    
         complete: function() {
             if(loaders[data.type]) {
@@ -789,5 +830,5 @@ function updateTest(test) {
     }
 
     var $testsResults = $env.find('.tests-results');
-    render(test, $testsResults, true);
+    render(test, $testsResults, {prepend: true});
 }

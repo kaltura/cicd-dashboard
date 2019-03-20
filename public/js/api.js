@@ -190,16 +190,28 @@ var api = {
             }	
         });	
     },
+
+    loadUsers: function($parent) {
+        api.roles(function(roles) {
+            $.ajax("api/users", {
+                success: function(users) {
+                    users.forEach(function(user) {	
+                        $html = $("<tr/>");
+                        $html.addClass("user");
+                        $parent.append($html);
+
+                        user.type = "user";
+                        user.roles = roles;
+                        render(user, $html, {dontWrap: true});	
+                    });
+                }
+            });	
+        });
+    },
     
-    'accept-register': function({email}) {
+    roles: function(callback) {
         $.ajax("api/roles", {
-            success: function(roles) {
-                render({
-                    type: 'accept-register',
-                    roles: roles,
-                    email: email
-                });
-            },	
+            success: callback,	
             error: function(jqXHR, textStatus, errorThrown) {	
                 if(jqXHR.status == 401) {	
                     pop({	
@@ -210,6 +222,16 @@ var api = {
                     });	
                 }	
             }	
+        });	
+    },
+    
+    'accept-register': function({email}) {
+        api.roles(function(roles) {
+            render({
+                type: 'accept-register',
+                roles: roles,
+                email: email
+            });
         });	
     },
 

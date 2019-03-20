@@ -36,12 +36,15 @@ process.on('uncaughtException', err => {
 });
 
 function requiresLogin(req, res, next) {
-    if (req.session && req.session.user) {
-        return next();
-    }
-    
     let parts = req.path.split('/');
     let action = parts[2];
+
+    if (req.session && req.session.user && req.session.user.permissions) {
+        if(req.session.user.permissions === '*' || req.session.user.permissions[action]) {
+            return next();
+        }        
+    }
+    
     if(modules.permissions.Anonymous[action]) {
         return next();
     }
@@ -78,13 +81,11 @@ app.get('/api/*', requiresLogin, (req, res) => {
 
 app.use(express.json());
   
-const apiHandler = (req, res) => {
+app.post('/api/*', requiresLogin, (req, res) => {
     let parts = req.path.split('/');
     let action = parts[2];
     modules.api.handle(req, res, action, req.body);
-}
-
-app.post('/api/*', requiresLogin, apiHandler);
+});
 
 app.get(['', '/', '/index.html'], (req, res) => {
     res.sendFile(path.join(__dirname, '/public', 'index.html'));
