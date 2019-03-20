@@ -11,6 +11,7 @@ var api = {
                 password: password
             }),
             success: function(user) {
+                api.permissions = user.permissions;
                 user.type = "user-header";
                 render(user, $("#userDetails"));
                 if(callback) {
@@ -204,6 +205,7 @@ var api = {
         $("#diagramContainer").empty();
         $.ajax("api/user", {
             success: function(user) {
+                api.permissions = user.permissions;
                 user.type = "user-header";
                 render(user, $("#userDetails"));
                 api.loadFlow();
@@ -354,6 +356,7 @@ var api = {
             }),
             success: function(user) {
                 $("#userDetails").empty();
+                api.permissions = user.permissions;
                 user.type = "user-header";
                 render(user, $("#userDetails"));
                 api.loadFlow();

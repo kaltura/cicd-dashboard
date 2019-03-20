@@ -472,6 +472,18 @@ function render(data, $parent, options) {
 
     $html.loadTemplate("templates/" + data.type + ".html", data, {                    
         complete: function() {
+            $html.find('button[data-requires-permission]').each(function() {
+                var $button = $(this);
+                var requiredPermission = $button.attr('data-requires-permission');
+                var permissionPrefix = $button.attr('data-permission-prefix');
+                if(permissionPrefix) {
+                    requiredPermission = data[permissionPrefix] + '-' + requiredPermission;
+                }
+                if(!api.permissions[requiredPermission]) {
+                    $button.remove();
+                }
+            });
+            
             if(loaders[data.type]) {
                 loaders[data.type]($html, data);
             }
