@@ -803,13 +803,13 @@ function updateRegistryTag(env, app, tag, data) {
 
 function updateTestProgress($test, test) {
     var succeed = test.succeed / test.total * 100;
-    var skiped = test.skiped / test.total * 100;
+    var skipped = test.skipped / test.total * 100;
     var failed = test.failed / test.total * 100;
     $test.find('.test-progress-succeed').css("width", succeed + "%");
-    $test.find('.test-progress-skiped').css("width", skiped + "%");
+    $test.find('.test-progress-skipped').css("width", skipped + "%");
     $test.find('.test-progress-failed').css("width", failed + "%");
     $test.find('.test-progress-succeed').attr("title", succeed + "%");
-    $test.find('.test-progress-skiped').attr("title", skiped + "%");
+    $test.find('.test-progress-skipped').attr("title", skipped + "%");
     $test.find('.test-progress-failed').attr("title", failed + "%");
     
     var $body;
@@ -855,7 +855,7 @@ function updateTest(test) {
         $test.find('.test-serverVersion').text(test.serverVersion);
         $test.find('.test-total').text(test.total);
         $test.find('.test-succeed').text(test.succeed);
-        $test.find('.test-skiped').text(test.skiped);
+        $test.find('.test-skipped').text(test.skipped);
         $test.find('.test-failed').text(test.failed);
 
         return;
