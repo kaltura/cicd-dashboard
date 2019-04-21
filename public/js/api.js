@@ -104,8 +104,26 @@ var api = {
                 env: env
             }),
             success: function(data) {
+                var regex = new RegExp("^" + env + "-");
                 Object.keys(data).forEach(repositoryName => {
                     var repositoryData = data[repositoryName];
+                    var $tag = $("#tag-" + repositoryName);
+                    if(!$tag.length) {
+                        var $env = $("#env-" + env);                        
+                        var $tags = $env.find(".tag-jobs-items");
+                        var $col = $("<div/>");
+                        $col.addClass("col");
+                        $tags.append($col);
+                        render({
+                            type: "tag",
+                            tag: env,
+                            src: $env.attr('data-src'),
+                            repository: repositoryName,
+                            name: repositoryName.replace(regex, ""),
+                            app: repositoryName.replace(regex, ""),
+                            tags: repositoryData
+                        }, $col);
+                    }
                     Object.keys(repositoryData).forEach(tag => updateRegistryTag(env, repositoryName, tag, repositoryData[tag]));
                 });
             }

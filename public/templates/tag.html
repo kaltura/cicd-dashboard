@@ -9,11 +9,15 @@
         </div>
     </div>
     <div class="card-body collapse show tag-details">
-        <span class="tag-version text-nowrap"></span><br/>
+        <span class="tag-version text-nowrap"></span>
+        <span class="tag-linux-version text-nowrap"></span><br/>
+        <span class="tag-windows-version text-nowrap"></span><br/>
         <span class="tag-last-deploy text-nowrap"></span><br/>
     </div>
     <div class="card-footer tag-deploy text-nowrap">
         <select class="deploy-version"></select>
-        <button class="deploy btn btn-secondary" disabled="true" data-requires-permission="build" data-permission-prefix="tag">Deploy</button>
+        <button class="deploy btn btn-secondary" style="display: none;" disabled="true" data-requires-permission="build" data-permission-prefix="tag">Deploy</button>
+        <button class="deploy-linux btn btn-secondary" style="display: none;" disabled="true" data-requires-permission="build" data-permission-prefix="tag">Deploy Linux</button>
+        <button class="deploy-windows btn btn-secondary" style="display: none;" disabled="true" data-requires-permission="build" data-permission-prefix="tag">Deploy Windows</button>
     </div>
 </div>

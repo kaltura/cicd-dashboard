@@ -146,15 +146,13 @@ var loaders = {
         });
         
         var $select = $html.find(".deploy-version");
-        if(data.versionRegex) {
-            $select.attr('data-regex', data.versionRegex);
-        }
-        else {
+        if(['phoenix', 'ingest', 'gateway', 'web-services'].indexOf(data.app.replace(new RegExp("^" + data.tag + "-"), "")) < 0) {
             $select.remove();
         }
 
         var $buildButten = $html.find(".deploy");
         if(data.jobName) {
+            $buildButten.show();
             $buildButten.removeAttr("disabled");
             $buildButten.text('Build');
             $buildButten.click(function() {
@@ -168,6 +166,20 @@ var loaders = {
                 if($select.length) {
                     data.from_image = data.src + "-" + data.app + ":" + $select.val();
                 }
+                data.os = 'linux';
+                if(['phoenix', 'web-services', 'ingest', 'filebeat'].indexOf(data.app) >= 0) {
+                    data.os = 'windows';
+                }
+                api.deployRegistry(data);
+            });
+            $html.find(".deploy-linux").click(function() {
+                data.os = 'linux';
+                data.tagPrefix = 'linux';
+                api.deployRegistry(data);
+            });
+            $html.find(".deploy-windows").click(function() {
+                data.os = 'windows';
+                data.tagPrefix = 'windows';
                 api.deployRegistry(data);
             });
         }
@@ -175,6 +187,8 @@ var loaders = {
             $html.find(".jenkins-status").remove();
             $html.find(".tag-deploy").remove();
         }
+        
+        Object.keys(data.tags).forEach(tag => updateRegistryTag(data.env, data.repository, tag, data.tags[tag]));
     },
     
     env: function($html, data) {
@@ -211,18 +225,12 @@ var loaders = {
             $html.find(".tag-jobs-status").remove();
         }
 
-        if(data.ecr) {
-            var $ecrItemsContainer = $html.find(".tag-jobs-items");
-            loaders.hItems($ecrItemsContainer, data.ecr.map(function(tag) {
-                tag.src = data.src;
-                tag.tag = data.tag;
-                return tag;
-            }));
-            var $tagJobsHeader = $html.find(".tag-jobs-header");
-            $tagJobsHeader.click(function() {
-                $ecrItemsContainer.collapse("toggle");
-            });
-        } 
+        var $ecrItemsContainer = $html.find(".tag-jobs-items");
+        loaders.hItems($ecrItemsContainer, []);
+        var $tagJobsHeader = $html.find(".tag-jobs-header");
+        $tagJobsHeader.click(function() {
+            $ecrItemsContainer.collapse("toggle");
+        });
         
         var $testsResults = $html.find(".tests-results").first();
         var $testsHeader = $html.find(".env-tests-header").first();
@@ -750,10 +758,9 @@ function updateRegistryTag(env, app, tag, data) {
 
     var $destinationTags = $(".src-" + app);
     if($destinationTags.length) {
-        var $select = $destinationTags.find(".deploy-version");
-        var versionRegex = $select.attr('data-regex');
-        if(versionRegex) {
-            versionRegex = new RegExp(versionRegex);
+        if(['phoenix', 'ingest', 'gateway', 'web-services'].indexOf(app.replace(new RegExp("^" + env + "-"), "")) >= 0) {
+            var $select = $destinationTags.find(".deploy-version");
+            var versionRegex = new RegExp("^[vV]?\\d+_\\d+_\\d+$");
             var value = (data.version ? `${tag} (${data.version})` : tag);
             if(tag.match(versionRegex) && $select.find("option[value='" + tag + "']").length == 0) {
                 $select.append("<option value=\"" + tag + "\">" + value + "</option>");
@@ -766,31 +773,51 @@ function updateRegistryTag(env, app, tag, data) {
     if(!tag.match(/latest$/)) {
         return;
     }
-
-    if(tag.match(/^linux-/)) {
-        app += "-linux";
-        data.tagPrefix = "linux";
-    }
-    if(tag.match(/^windows-/)) {
-        app += "-windows";
-        data.tagPrefix = "windows";
-    }
-
+    
     var $tag = $("#tag-" + app);
     if(!$tag.length) {
         console.log("Tag not found: #tag-" + app);
         return;
+    }    
+    $versions = $tag.find(".deploy-version OPTION");
+    if($versions.length) {
+        $tag.find('.deploy').show();
     }
 
-    if(data.version) {
-        var $version = $tag.find('.tag-version');
-        $version.text("Version: " + data.version);
+    if(!data.version) {
+        data.version = 'latest';
     }
+
+    var $version = $tag.find('.tag-version');
+    var version = "Version: " + data.version;
+
+    if(tag.match(/^linux-/)) {
+        $version = $tag.find('.tag-linux-version');
+        version = "Linux Version: " + data.version;
+    }
+    if(tag.match(/^windows-/)) {
+        $version = $tag.find('.tag-windows-version');
+        version = "Windows Version: " + data.version;
+    }
+
+    $version.text(version);
 
     if(tag.match(/^((windows|linux)-)?latest$/)) {
         if(data.version && $destinationTags) {
-            $destinationTags.find('.deploy')
-                .text('Deploy ' + data.version)
+            var $deploy = $destinationTags.find('.deploy');
+            var text = 'Deploy ' + data.version;
+            if(tag.match(/^linux-/)) {
+                $deploy = $destinationTags.find('.deploy-linux');
+                text = 'Deploy Linux ' + data.version;
+            }
+            if(tag.match(/^windows-/)) {
+                $deploy = $destinationTags.find('.deploy-windows');
+                text = 'Deploy Windows ' + data.version;
+            }
+            
+            $deploy
+                .text(text)
+                .show()
                 .removeAttr("disabled");
         }
         $containers = $(".container.app-" + app);
