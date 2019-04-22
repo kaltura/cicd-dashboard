@@ -237,6 +237,17 @@ var loaders = {
         $testsHeader.click(function() {
             $testsResults.collapse("toggle");
         });
+
+        if(data.links) {
+            var $main = $html.find(".env-main");
+            data.links.forEach(function(links) {
+                var $links = $('<div class="card-footer" />')
+                $main.append($links)
+                links.forEach(function(link) {
+                    $links.append('<a target="_blank" class="card-link" href="' + link.url + '">' + link.text + '</a>');
+                });
+            });
+        }
     },
 
     "jenkins-tag": function($html, data) {

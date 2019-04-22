@@ -75,6 +75,11 @@ app.get('/api/*', requiresLogin, (req, res) => {
 
 app.use(express.json());
   
+app.get('/env', function(req, res) {
+    var env = JSON.parse(Buffer.from(req.query.env, 'base64').toString());
+    modules.api.env(env, res);
+});
+
 app.post('/api/*', requiresLogin, (req, res) => {
     let parts = req.path.split('/');
     let action = parts[2];
