@@ -775,7 +775,7 @@ function updateRegistryTag(env, app, tag, data) {
             var value = (data.version ? `${tag} (${data.version})` : tag);
             if(tag.match(versionRegex) && $select.find("option[value='" + tag + "']").length == 0) {
                 $select.append("<option value=\"" + tag + "\">" + value + "</option>");
-                $destinationTags.find(".deploy").removeAttr("disabled");
+                $destinationTags.find(".deploy").show().removeAttr("disabled");
             }
             $destinationTags = null;
         }
