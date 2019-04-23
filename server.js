@@ -25,6 +25,7 @@ modules.registry = require('./lib/ecr')(modules);
 modules.model = require('./lib/model')(modules);
 modules.jenkins = require('./lib/jenkins')(modules);
 modules.search = require('./lib/search')(modules);
+modules.deploy = require('./lib/deploy')(modules);
 modules.api = require('./lib/api')(modules);
 modules.websocket = require('./lib/websocket')(modules);
 
