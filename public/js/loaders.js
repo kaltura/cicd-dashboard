@@ -76,12 +76,14 @@ var loaders = {
         $html.attr("id", data.id);
 
         var $itemsContainer = $html.find(".items").first();
-        for(var i = 0; i < data.items.length; i++) {
-            data.items[i].$parent = $itemsContainer;
-            var $col = $("<div/>");
-            $col.addClass("col");
-            $itemsContainer.append($col);
-            render(data.items[i], $col);
+        if(data.items) {
+            for(var i = 0; i < data.items.length; i++) {
+                data.items[i].$parent = $itemsContainer;
+                var $col = $("<div/>");
+                $col.addClass("col");
+                $itemsContainer.append($col);
+                render(data.items[i], $col);
+            }
         }
 
         var $title = $html.find(".title").first();
@@ -382,12 +384,16 @@ var loaders = {
     
     "h-repeater": function($html, data) {
         var $itemsContainer = $html.find(".items").first();
-        loaders.hItems($itemsContainer, data.items);
+        if(data.items) {
+            loaders.hItems($itemsContainer, data.items);
+        }
     },
     
     "v-repeater": function($html, data) {
         var $itemsContainer = $html.find(".items").first();
-        loaders.vItems($itemsContainer, data.items);
+        if(data.items) {
+            loaders.vItems($itemsContainer, data.items);
+        }
     },
 
     'accept-register': function($html, data) {
