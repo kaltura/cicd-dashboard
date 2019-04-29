@@ -101,5 +101,6 @@ httpServer.listen(port, () => {
     modules.logger.log(`Server running on port ${port}`);
 });
 
+modules.api.start(io);
 modules.search.start(io);
 modules.registry.start(io);

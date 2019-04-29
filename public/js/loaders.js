@@ -28,6 +28,8 @@ function toggleAll($items, action) {
 }
 
 var loaders = {
+
+    callbacks: {},
     
     login: function($html, data) {
         var $login = $html.find(".login");
@@ -72,23 +74,45 @@ var loaders = {
     },
     
     frame: function($html, data) {
-        data.id = "frame-" + data.name;
-        $html.attr("id", data.id);
+        $html.attr("id", "frame-" + data.name);
 
         var $itemsContainer = $html.find(".items").first();
-        if(data.items) {
-            for(var i = 0; i < data.items.length; i++) {
-                data.items[i].$parent = $itemsContainer;
-                var $col = $("<div/>");
-                $col.addClass("col");
-                $itemsContainer.append($col);
-                render(data.items[i], $col);
-            }
+        var addItem = function(item) {
+            item.$parent = $itemsContainer;
+            var $col = $("<div/>");
+            $col.addClass("col");
+            $itemsContainer.append($col);
+            render(item, $col);  
         }
 
+        var itemIds = {}
+        if(data.items) {
+            for(var i = 0; i < data.items.length; i++) {
+                addItem(data.items[i]);                
+                if(data.items[i].id) {
+                    itemIds[data.items[i].id] = true;
+                }
+            }
+        }
+        
+        var envParentId = null;
+        if(data.id) {
+            envParentId = data.id;
+            loaders.callbacks[envParentId] = addItem;
+        }
         var $title = $html.find(".title").first();
         $title.click(function() {
             $itemsContainer.collapse("toggle");
+            if(envParentId) {
+                api.loadFrame(envParentId);
+                envParentId = null;
+            }
+            if(Object.keys(itemIds).length) {
+                Object.keys(itemIds).forEach(function(itemId) {
+                    api.loadFrame(itemId);
+                });
+                itemIds = {};
+            }
         });
         if(data.src) {
             var $flow = $html.find(".main-flow").first();
@@ -387,12 +411,22 @@ var loaders = {
         if(data.items) {
             loaders.hItems($itemsContainer, data.items);
         }
+        if(data.id) {
+            loaders.callbacks[data.id] = function(item) {
+                loaders.hItems($itemsContainer, [item]);
+            };
+        }
     },
     
     "v-repeater": function($html, data) {
         var $itemsContainer = $html.find(".items").first();
         if(data.items) {
             loaders.vItems($itemsContainer, data.items);
+        }
+        if(data.id) {
+            loaders.callbacks[data.id] = function(item) {
+                loaders.vItems($itemsContainer, [item]);
+            };
         }
     },
 

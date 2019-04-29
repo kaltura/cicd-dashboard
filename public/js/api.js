@@ -205,6 +205,19 @@ var api = {
             }	
         });	
     },
+
+    loadFrame: function(parentId) {
+        $.ajax("api/frame", {
+            method: "POST",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({
+                parentId: parentId
+            }),
+            success: function(envs) {
+                envs.forEach(loaders.callbacks[parentId]);
+            }
+        });
+    },
     
     logout: function() {
         $("#userDetails").empty();
