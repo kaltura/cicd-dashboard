@@ -103,4 +103,5 @@ httpServer.listen(port, () => {
 
 modules.api.start(io);
 modules.search.start(io);
+modules.deploy.start(io);
 modules.registry.start(io);

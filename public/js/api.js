@@ -218,6 +218,17 @@ var api = {
             }
         });
     },
+
+    status: function(tag, src) {
+        $.ajax("api/status", {
+            method: "POST",
+            contentType: "application/json; charset=utf-8",
+            data: JSON.stringify({
+                tag: tag, 
+                src: src
+            })
+        });
+    },
     
     logout: function() {
         $("#userDetails").empty();

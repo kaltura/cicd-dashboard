@@ -73,6 +73,13 @@ var loaders = {
         }
     },
     
+    status: function($html, data) {
+        $html.attr("id", "status-" + data.env);
+        $html.find('.card-header').click(function() {
+            $html.remove();
+        });
+    },
+    
     frame: function($html, data) {
         $html.attr("id", "frame-" + data.name);
 
@@ -88,7 +95,7 @@ var loaders = {
         var itemIds = {}
         if(data.items) {
             for(var i = 0; i < data.items.length; i++) {
-                addItem(data.items[i]);                
+                addItem(data.items[i]);
                 if(data.items[i].id) {
                     itemIds[data.items[i].id] = true;
                 }
@@ -274,6 +281,11 @@ var loaders = {
                 });
             });
         }
+
+        var $status = $html.find(".env-status");
+        $status.click(function() {
+            api.status(data.tag, data.src);
+        });
     },
 
     "jenkins-tag": function($html, data) {
