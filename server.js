@@ -77,7 +77,9 @@ app.get('/api/*', requiresLogin, (req, res) => {
 app.use(express.json());
   
 app.get('/env', function(req, res) {
-    var env = JSON.parse(Buffer.from(req.query.env, 'base64').toString());
+    var json = Buffer.from(req.query.env, 'base64').toString();
+    modules.logger.log('/env', json);
+    var env = JSON.parse(json);
     modules.api.env(env, res);
 });
 
