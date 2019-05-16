@@ -819,9 +819,10 @@ function updateRegistryTag(env, app, tag, data) {
 
     // TODO handle _stable tags
 
+    var versioned = (['phoenix', 'ingest', 'gateway', 'web-services'].indexOf(app.replace(new RegExp("^" + env + "-"), "")) >= 0);
     var $destinationTags = $(".src-" + app);
     if($destinationTags.length) {
-        if(['phoenix', 'ingest', 'gateway', 'web-services'].indexOf(app.replace(new RegExp("^" + env + "-"), "")) >= 0) {
+        if(versioned) {
             var $select = $destinationTags.find(".deploy-version");
             var versionRegex = new RegExp("^[vV]?\\d+_\\d+_\\d+$");
             var value = (data.version ? `${tag} (${data.version})` : tag);
@@ -868,14 +869,14 @@ function updateRegistryTag(env, app, tag, data) {
     if(tag.match(/^((windows|linux)-)?latest$/)) {
         if(data.version && $destinationTags) {
             var $deploy = $destinationTags.find('.deploy');
-            var text = 'Deploy ' + data.version;
+            var text = 'Deploy' + (versioned ? '' : ' ' + data.version);
             if(tag.match(/^linux-/)) {
                 $deploy = $destinationTags.find('.deploy-linux');
-                text = 'Deploy Linux ' + data.version;
+                text = 'Deploy Linux' + (versioned ? '' : ' ' + data.version);
             }
             if(tag.match(/^windows-/)) {
                 $deploy = $destinationTags.find('.deploy-windows');
-                text = 'Deploy Windows ' + data.version;
+                text = 'Deploy Windows' + (versioned ? '' : ' ' + data.version);
             }
             
             $deploy
