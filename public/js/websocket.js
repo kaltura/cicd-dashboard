@@ -27,27 +27,6 @@ var socketHandler = {
         console.log("Connected to server");
     },
 
-    status: function(env, type, status, msg) {
-        console.log(env, type, status, msg);
-        if(type == 'start') {
-            render({
-                type: "status",
-                env: env,
-                class: "bg-success",
-                title: 'Cluster Status'
-            }, $("#notificationsContainer"));
-        }
-        else {
-            var $html = $("#status-" + env);
-            if(!$html.length) {
-                return;
-            }
-            var $item = $html.find('.item-' + type);
-            $item.find('img').attr('src', status ? 'images/SUCCESS.png' : 'images/nobuilt.png');
-            $item.find('.msg').text(' - ' + msg);
-        }
-    },
-
     container: function(data) {
         updateStatus(data);
     },

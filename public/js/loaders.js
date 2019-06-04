@@ -72,14 +72,7 @@ var loaders = {
             render(items[i], $html);
         }
     },
-    
-    status: function($html, data) {
-        $html.attr("id", "status-" + data.env);
-        $html.find('.card-header').click(function() {
-            $html.remove();
-        });
-    },
-    
+        
     frame: function($html, data) {
         $html.attr("id", "frame-" + data.name);
 
@@ -167,9 +160,6 @@ var loaders = {
     tag: function($html, data) {
         loaders.app($html, data);        
         var id = "tag-" + data.tag + "-" + data.app;
-        if(data.tagPrefix) {
-            id += "-" + data.tagPrefix;
-        }
         $html.attr("id", id);
 
         var $tagsContainer = $html.find(".tag-details").first();
@@ -178,11 +168,6 @@ var loaders = {
             $tagsContainer.collapse("toggle");                    
         });
         
-        var $select = $html.find(".deploy-version");
-        if(['phoenix', 'ingest', 'gateway', 'web-services'].indexOf(data.app.replace(new RegExp("^" + data.tag + "-"), "")) < 0) {
-            $select.remove();
-        }
-
         var $buildButten = $html.find(".deploy");
         if(data.jobName) {
             $buildButten.show();
@@ -196,24 +181,17 @@ var loaders = {
             $html.addClass("src-" + data.src + "-" + data.app);
             $buildButten.click(function() {
                 $select = $html.find(".deploy-version");
-                if($select.length) {
-                    data.from_image = data.src + "-" + data.app + ":" + $select.val();
-                }
-                data.os = 'linux';
+                var params = {
+                    tag: $select.val(),
+                    app: data.app,
+                    from_env: data.src,
+                    to_env: data.tag,
+                    os: 'linux'
+                };                
                 if(['phoenix', 'web-services', 'ingest', 'filebeat'].indexOf(data.app) >= 0) {
-                    data.os = 'windows';
+                    params.os = 'windows';
                 }
-                api.deployRegistry(data);
-            });
-            $html.find(".deploy-linux").click(function() {
-                data.os = 'linux';
-                data.tagPrefix = 'linux';
-                api.deployRegistry(data);
-            });
-            $html.find(".deploy-windows").click(function() {
-                data.os = 'windows';
-                data.tagPrefix = 'windows';
-                api.deployRegistry(data);
+                api.deployRegistry(params);
             });
         }
         else {
@@ -281,11 +259,6 @@ var loaders = {
                 });
             });
         }
-
-        var $status = $html.find(".env-status");
-        $status.click(function() {
-            api.status(data.tag, data.src);
-        });
     },
 
     "jenkins-tag": function($html, data) {
@@ -387,7 +360,6 @@ var loaders = {
         
         if(data.app) {
             loaders.app($html, data);
-            // TODO update contaner status (is latest of ECR?)
         }
 
 
@@ -762,9 +734,7 @@ function updateDeploy(deploy) {
         }
     }
     else {
-        var app = deploy.id
-            .replace(/[:-]latest$/, '')
-            .replace(/:/, '-');
+        var app = deploy.id.replace(/:[^:]+$/, '');
 
         var $html = $("#tag-" + app);
         if(deploy.status == "STARTED") {
@@ -817,78 +787,25 @@ function updateRegistryTag(env, app, tag, data) {
         updateService($service, data.version);
     }
 
-    // TODO handle _stable tags
-
-    var versioned = (['phoenix', 'ingest', 'gateway', 'web-services'].indexOf(app.replace(new RegExp("^" + env + "-"), "")) >= 0);
     var $destinationTags = $(".src-" + app);
     if($destinationTags.length) {
-        if(versioned) {
-            var $select = $destinationTags.find(".deploy-version");
-            var versionRegex = new RegExp("^[vV]?\\d+_\\d+_\\d+$");
-            var value = (data.version ? `${tag} (${data.version})` : tag);
-            if(tag.match(versionRegex) && $select.find("option[value='" + tag + "']").length == 0) {
-                $select.append("<option value=\"" + tag + "\">" + value + "</option>");
-                $destinationTags.find(".deploy").show().removeAttr("disabled");
-            }
-            $destinationTags = null;
+        var $select = $destinationTags.find(".deploy-version");
+        if(!$select.find("option[value='" + tag + "']").length) {
+            $select.append("<option value=\"" + tag + "\">" + tag + "</option>");
+            $destinationTags.find(".deploy").show().removeAttr("disabled");
         }
     }
 
-    if(!tag.match(/latest$/)) {
-        return;
-    }
-    
     var $tag = $("#tag-" + app);
     if(!$tag.length) {
         console.log("Tag not found: #tag-" + app);
         return;
     }    
-    $versions = $tag.find(".deploy-version OPTION");
-    if($versions.length) {
-        $tag.find('.deploy').show();
-    }
+    $tag.find('.deploy').show();
 
-    if(!data.version) {
-        data.version = 'latest';
-    }
-
-    var $version = $tag.find('.tag-version');
-    var version = "Version: " + data.version;
-
-    if(tag.match(/^linux-/)) {
-        $version = $tag.find('.tag-linux-version');
-        version = "Linux Version: " + data.version;
-    }
-    if(tag.match(/^windows-/)) {
-        $version = $tag.find('.tag-windows-version');
-        version = "Windows Version: " + data.version;
-    }
-
-    $version.text(version);
-
-    if(tag.match(/^((windows|linux)-)?latest$/)) {
-        if(data.version && $destinationTags) {
-            var $deploy = $destinationTags.find('.deploy');
-            var text = 'Deploy' + (versioned ? '' : ' ' + data.version);
-            if(tag.match(/^linux-/)) {
-                $deploy = $destinationTags.find('.deploy-linux');
-                text = 'Deploy Linux' + (versioned ? '' : ' ' + data.version);
-            }
-            if(tag.match(/^windows-/)) {
-                $deploy = $destinationTags.find('.deploy-windows');
-                text = 'Deploy Windows' + (versioned ? '' : ' ' + data.version);
-            }
-            
-            $deploy
-                .text(text)
-                .show()
-                .removeAttr("disabled");
-        }
-        $containers = $(".container.app-" + app);
-        $containers.each(function() {
-            $container = $(this);
-            updateContainer($container, data.digest)
-        });
+    var $versions = $tag.find('.tag-version');
+    if(!$versions.find('.' + tag).length) {
+        $versions.append('<li class="list-group-item text-nowrap ' + tag + '">' + tag + '</li>');
     }
 }
 
